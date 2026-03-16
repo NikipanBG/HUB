@@ -3,9 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AVE Pro V15 - ULTIMATE</title>
+    <title>AVE Pro V15 - ULTIMATE+</title>
     <style>
-        :root { --primary: #2563eb; --viber: #7360f2; --success: #22c55e; --danger: #ef4444; --dark: #1e293b; --bg: #f8fafc; }
+        :root { 
+            --primary: #2563eb; 
+            --viber: #7360f2; 
+            --success: #22c55e; 
+            --danger: #ef4444; 
+            --warning: #f59e0b;
+            --dark: #1e293b; 
+            --bg: #f8fafc; 
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); padding-bottom: 80px; color: #334155; }
         
@@ -16,40 +24,67 @@
         .loc-title { font-weight: bold; color: var(--primary); }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        label { display: block; font-size: 0.75rem; margin-bottom: 4px; color: #64748b; font-weight: 600; text-transform: uppercase; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 10px; outline: none; }
-        input:focus { border-color: var(--primary); }
+        @media (max-width: 400px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
         
-        .btn { border: none; border-radius: 8px; padding: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        label { display: block; font-size: 0.75rem; margin-bottom: 4px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 10px; outline: none; background: white; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        
+        .btn { border: none; border-radius: 8px; padding: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-viber { background: var(--viber); color: white; padding: 6px 12px; width: auto; font-size: 0.8rem; }
+        .btn-success { background: var(--success); color: white; }
         .btn-expense { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+        .btn-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; border-top: 1px solid #e2e8f0; height: 70px; z-index: 1000; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; color: #64748b; cursor: pointer; }
-        .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); background: #f0f7ff; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; color: #64748b; cursor: pointer; transition: background 0.2s; }
+        .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); background: #f0f7ff; font-weight: 600; }
 
-        .client-entry { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #cbd5e1; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .client-entry { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #cbd5e1; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.1s; }
+        .client-entry:active { transform: scale(0.99); }
         .client-entry .debt { color: var(--danger); font-weight: bold; font-size: 1.1rem; }
 
-        #dossierOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 15px; }
+        #dossierOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 15px; backdrop-filter: blur(3px); }
         .modal { background: white; width: 100%; max-width: 500px; border-radius: 15px; padding: 20px; max-height: 85vh; overflow-y: auto; position: relative; }
+        .modal-close { position: absolute; right: 15px; top: 15px; background: #f1f5f9; border: none; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #e2e8f0; }
+        
         .hist-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 0.85rem; }
+        .hist-positive { color: var(--success); font-weight: bold; }
+        .hist-negative { color: var(--danger); font-weight: bold; }
 
-        .search-results { position: absolute; background: white; width: 100%; border: 1px solid #ddd; z-index: 1100; top: 65px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 150px; overflow-y: auto; }
-        .s-item { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+        .search-results { position: absolute; background: white; width: 100%; border: 1px solid #ddd; z-index: 1100; top: 70px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 150px; overflow-y: auto; }
+        .s-item { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s; }
+        .s-item:hover { background: #f8fafc; }
 
         .report-dark { background: var(--dark); color: white; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 15px; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
+        
         #loginScreen { position: fixed; inset: 0; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        
+        .sale-item { border-left: 5px solid; transition: background 0.2s; }
+        .sale-item.debt { border-left-color: var(--danger); }
+        .sale-item.paid { border-left-color: var(--success); }
+        
+        .action-buttons { display: flex; gap: 5px; margin-top: 8px; }
+        .btn-small { padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; border: none; cursor: pointer; }
+        
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; z-index: 3000; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { bottom: 0; opacity: 0; } to { bottom: 80px; opacity: 1; } }
+        
+        .loading { opacity: 0.5; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div id="loginScreen">
     <div class="card" style="width: 90%; max-width: 350px; text-align:center;">
-        <h2 style="margin-bottom:20px;">AVE Pro V15</h2>
-        <input type="password" id="passCode" placeholder="Парола...">
+        <h2 style="margin-bottom:20px; color: var(--primary);">AVE Pro V15+</h2>
+        <input type="password" id="passCode" placeholder="Парола..." onkeypress="if(event.key==='Enter') checkLogin()">
         <button class="btn btn-primary" onclick="checkLogin()">ВЛЕЗ</button>
     </div>
 </div>
@@ -61,46 +96,76 @@
 
 <div id="dossierOverlay">
     <div class="modal">
-        <button style="position:absolute; right:15px; top:15px; background:none; border:none; font-size:1.5rem;" onclick="closeDossier()">×</button>
+        <button class="modal-close" onclick="closeDossier()">×</button>
         <h3 id="dosName">Досие на клиент</h3>
-        <div id="dosTotal" style="margin:15px 0; padding:10px; background: #fef2f2; border-radius:8px; color:red; font-weight:bold;"></div>
-        <div id="dosHistory" style="margin-bottom:20px; border-top:1px solid #eee;"></div>
+        <div id="dosTotal" style="margin:15px 0; padding:15px; background: #fef2f2; border-radius:8px; color:var(--danger); font-weight:bold; font-size:1.2rem;"></div>
+        
+        <div style="margin-bottom:15px;">
+            <label>История на транзакциите</label>
+            <div id="dosHistory" style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 10px;"></div>
+        </div>
+        
         <div style="border-top:2px solid #eee; padding-top:15px;">
             <label>Погасяване на дълг (EUR)</label>
             <div class="grid-2">
-                <input type="number" id="repayAmt" placeholder="Сума...">
-                <button class="btn btn-primary" style="background:var(--success);" onclick="saveRepay()">ПЛАТИ</button>
+                <input type="number" id="repayAmt" placeholder="Сума..." step="0.01" min="0.01">
+                <button class="btn btn-success" onclick="saveRepay()">✓ ПЛАТИ</button>
             </div>
+            <button class="btn btn-warning" style="margin-top:10px;" onclick="closeDossier()">Затвори</button>
         </div>
     </div>
 </div>
 
 <div class="container">
+    <!-- Таб ПРОДАЖБИ -->
     <div id="tabSales">
         <div class="card">
             <div class="grid-2">
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                     <label>Клиент</label>
                     <input type="text" id="cName" placeholder="Име..." oninput="searchCustomer(this.value)" autocomplete="off">
                     <div id="custResults" class="search-results hidden"></div>
                 </div>
-                <div class="form-group"><label>Документ №</label><input type="text" id="dNum" placeholder="Ф-ра / No..."></div>
-            </div>
-            <div class="form-group"><label>Артикул / Описание</label><input type="text" id="sDesc" placeholder="Артикул..."></div>
-            <div class="grid-2">
-                <div class="form-group"><label>Цена EUR</label><input type="number" id="sPrice" step="0.01" oninput="doCalc()"></div>
                 <div class="form-group">
-                    <label>Тип</label>
-                    <select id="pType" onchange="doCalc()"><option value="CASH">Брой/Карта</option><option value="BANK">Банка</option><option value="COD">Наложен</option></select>
+                    <label>Документ №</label>
+                    <input type="text" id="dNum" placeholder="Ф-ра / No...">
                 </div>
             </div>
+            
+            <div class="form-group">
+                <label>Артикул / Описание</label>
+                <input type="text" id="sDesc" placeholder="Артикул...">
+            </div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Цена EUR</label>
+                    <input type="number" id="sPrice" step="0.01" oninput="doCalc()">
+                </div>
+                <div class="form-group">
+                    <label>Тип</label>
+                    <select id="pType" onchange="doCalc()">
+                        <option value="CASH">В Брой</option>
+                        <option value="BANK">Банка</option>
+                        <option value="COD">Наложен</option>
+                    </select>
+                </div>
+            </div>
+            
             <div id="cashFields">
                 <div class="grid-2">
-                    <div class="form-group"><label>С Карта (EUR)</label><input type="number" id="cAmt" value="0" oninput="doCalc()"></div>
-                    <div class="form-group"><label>Даден Кеш</label><input type="number" id="hAmt" placeholder="0.00" oninput="doCalc()"></div>
+                    <div class="form-group">
+                        <label>С Карта (EUR)</label>
+                        <input type="number" id="cAmt" value="0" step="0.01" oninput="doCalc()">
+                    </div>
+                    <div class="form-group">
+                        <label>Даден Кеш</label>
+                        <input type="number" id="hAmt" placeholder="0.00" step="0.01" oninput="doCalc()">
+                    </div>
                 </div>
                 <div id="calcLabel" style="padding:10px; border-radius:8px; margin-bottom:12px; text-align:center; font-weight:bold; display:none;"></div>
             </div>
+            
             <button class="btn btn-primary" onclick="saveSale()">💾 ЗАПИШИ ПРОДАЖБА</button>
         </div>
 
@@ -108,204 +173,681 @@
             <label>Нов Разход (Служебен)</label>
             <div class="grid-2">
                 <input type="text" id="eDesc" placeholder="Основание...">
-                <input type="number" id="eAmt" placeholder="Сума...">
+                <input type="number" id="eAmt" placeholder="Сума..." step="0.01">
             </div>
             <button class="btn btn-expense" onclick="saveExpense()">💸 ЗАПИШИ РАЗХОД</button>
         </div>
+        
         <div id="logEntries"></div>
     </div>
 
+    <!-- Таб КЛИЕНТИ -->
     <div id="tabClients" class="hidden">
+        <div class="card">
+            <label>Търси клиент</label>
+            <input type="text" id="searchClient" placeholder="Въведете име..." oninput="filterClients()">
+        </div>
         <div id="listClients"></div>
     </div>
 
+    <!-- Таб ОТЧЕТ -->
     <div id="tabReport" class="hidden">
         <div class="report-dark">
             <small>КАСОВА НАЛИЧНОСТ</small>
             <h2 id="finalCash" style="color:var(--success); font-size:2.2rem; margin:10px 0;">0.00 EUR</h2>
             <div id="reportStats" style="font-size:0.9rem; opacity:0.8; line-height:1.5;"></div>
         </div>
+        
         <div class="card">
             <label>Google Script URL</label>
-            <input type="text" id="gUrl" onchange="saveConf()">
-            <label>Начална каса за деня</label>
+            <input type="url" id="gUrl" placeholder="https://script.google.com/..." onchange="saveConf()">
+            
+            <label>Начална каса за деня (EUR)</label>
             <input type="number" id="iCash" step="0.01" onchange="saveConf()">
+            
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn btn-warning" style="flex:1;" onclick="exportData()">📤 Експорт</button>
+                <button class="btn btn-expense" style="flex:1;" onclick="clearAll()">🗑️ НУЛИРАЙ</button>
+            </div>
         </div>
-        <button class="btn" style="background:#fee2e2; color:var(--danger);" onclick="clearAll()">🗑️ НУЛИРАЙ ДЕНЯ</button>
+        
+        <div class="card">
+            <h4 style="margin-bottom:10px;">Статистика за деня</h4>
+            <div id="detailedStats"></div>
+        </div>
     </div>
 </div>
 
 <nav class="nav-bar">
     <div class="nav-item active" onclick="goTab('sales', this)">🛒 Каса</div>
     <div class="nav-item" onclick="goTab('clients', this)">👥 Клиенти</div>
-    <div class="nav-item" onclick="switchTabSettings('report', this)">📊 Отчет</div>
+    <div class="nav-item" onclick="goTab('report', this)">📊 Отчет</div>
 </nav>
 
 <script>
-    const PWD = { 'sklad': 'Склад', 'magazin1': 'Магазин 1' };
-    let KEY = '', LOC = '', SEL_CUST = '';
+    // Конфигурация
+    const PWD = { 
+        'sklad': 'Склад', 
+        'magazin1': 'Магазин 1' 
+    };
+    
+    // Глобални променливи
+    let KEY = '';
+    let LOC = '';
+    let SEL_CUST = '';
+    let currentData = null;
+    let toastTimeout = null;
 
+    // ==================== ПОМОЩНИ ФУНКЦИИ ====================
+    
+    function showToast(message, type = 'info') {
+        if (toastTimeout) clearTimeout(toastTimeout);
+        
+        const oldToast = document.querySelector('.toast');
+        if (oldToast) oldToast.remove();
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.background = type === 'success' ? 'var(--success)' : 
+                                type === 'error' ? 'var(--danger)' : 'var(--dark)';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        toastTimeout = setTimeout(() => toast.remove(), 3000);
+    }
+    
+    function loadData() {
+        if (!KEY) return { sales: [], exps: [], history: {}, debts: {}, config: {} };
+        
+        const saved = localStorage.getItem(KEY);
+        if (!saved) {
+            return { sales: [], exps: [], history: {}, debts: {}, config: {} };
+        }
+        
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            console.error('Грешка при зареждане на данни:', e);
+            return { sales: [], exps: [], history: {}, debts: {}, config: {} };
+        }
+    }
+    
+    function saveData(data) {
+        if (!KEY) return;
+        localStorage.setItem(KEY, JSON.stringify(data));
+        currentData = data;
+    }
+    
+    // ==================== ЛОГИН ====================
+    
     function checkLogin() {
-        const p = document.getElementById('passCode').value.toLowerCase();
-        if(PWD[p]) {
-            LOC = PWD[p]; KEY = 'ave_v15_' + p;
+        const p = document.getElementById('passCode').value.toLowerCase().trim();
+        if (PWD[p]) {
+            LOC = PWD[p];
+            KEY = 'ave_v15_' + p;
+            
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('locDisplay').textContent = 'Обект: ' + LOC;
+            
+            // Зареждане на конфигурацията
+            const data = loadData();
+            document.getElementById('gUrl').value = data.config?.gUrl || '';
+            document.getElementById('iCash').value = data.config?.initCash || 0;
+            
             refresh();
-        } else alert('Грешна парола!');
+            showToast('Успешен вход в ' + LOC, 'success');
+        } else {
+            alert('Грешна парола!');
+            document.getElementById('passCode').value = '';
+        }
     }
-
+    
+    // ==================== КАЛКУЛАЦИИ ====================
+    
     function doCalc() {
         const total = parseFloat(document.getElementById('sPrice').value) || 0;
         const card = parseFloat(document.getElementById('cAmt').value) || 0;
         const handed = parseFloat(document.getElementById('hAmt').value) || 0;
+        const type = document.getElementById('pType').value;
+        
         const label = document.getElementById('calcLabel');
-        const net = total - card;
-        if(net <= 0 || document.getElementById('pType').value !== 'CASH') { label.style.display = 'none'; return; }
-        label.style.display = 'block';
-        if(handed >= net) {
-            label.style.background = '#dcfce7'; label.style.color = '#166534';
-            label.textContent = `РЕСТО: ${(handed - net).toFixed(2)}€`;
+        const cashFields = document.getElementById('cashFields');
+        
+        // Скриваме полетата за кеш, ако не е CASH
+        if (type !== 'CASH') {
+            cashFields.style.display = 'none';
+            label.style.display = 'none';
+            return;
         } else {
-            label.style.background = '#fef2f2'; label.style.color = '#991b1b';
-            label.textContent = `ДЪЛГ: ${(net - handed).toFixed(2)}€`;
+            cashFields.style.display = 'block';
+        }
+        
+        const net = total - card;
+        
+        if (net <= 0) {
+            label.style.display = 'none';
+            return;
+        }
+        
+        label.style.display = 'block';
+        
+        if (handed >= net) {
+            label.style.background = '#dcfce7';
+            label.style.color = '#166534';
+            label.innerHTML = `💰 РЕСТО: ${(handed - net).toFixed(2)} €`;
+        } else {
+            label.style.background = '#fef2f2';
+            label.style.color = '#991b1b';
+            label.innerHTML = `⚠️ ДЪЛГ: ${(net - handed).toFixed(2)} € <small>(неплатено)</small>`;
         }
     }
-
+    
+    // ==================== ПРОДАЖБИ ====================
+    
     function saveSale() {
-        const name = document.getElementById('cName').value || 'Анонимен';
+        // Валидация
         const price = parseFloat(document.getElementById('sPrice').value) || 0;
+        if (price <= 0) {
+            showToast('Моля, въведете валидна цена!', 'error');
+            return;
+        }
+        
+        const name = document.getElementById('cName').value.trim() || 'Анонимен';
         const card = parseFloat(document.getElementById('cAmt').value) || 0;
         const handed = parseFloat(document.getElementById('hAmt').value) || 0;
         const type = document.getElementById('pType').value;
+        
+        // Изчисления
         const inCash = (type === 'CASH') ? Math.min(handed, (price - card)) : 0;
         const debt = (type === 'CASH') ? Math.max(0, (price - card - handed)) : 0;
         const paid = inCash + card;
-
-        const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), cust: name, desc: document.getElementById('sDesc').value, price, inCash, inCard: card, paid, debt, type };
-
-        let data = JSON.parse(localStorage.getItem(KEY) || '{"sales":[], "exps":[], "history":{}}');
-        data.sales.unshift(entry);
-        if(!data.history[name]) data.history[name] = [];
-        data.history[name].unshift({ date: entry.date, desc: entry.desc, amt: price, debt: debt });
-
-        let db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
-        db[name] = (db[name] || 0) + debt;
         
-        localStorage.setItem('ave_customers', JSON.stringify(db));
-        localStorage.setItem(KEY, JSON.stringify(data));
-        sync(entry); resetForm(); refresh();
-    }
-
-    function saveExpense() {
-        const desc = document.getElementById('eDesc').value;
-        const amt = parseFloat(document.getElementById('eAmt').value);
-        if(!desc || !amt) return;
-        let data = JSON.parse(localStorage.getItem(KEY));
-        data.exps.unshift({ desc, amt, time: new Date().toLocaleTimeString() });
-        localStorage.setItem(KEY, JSON.stringify(data));
-        document.getElementById('eDesc').value = ''; document.getElementById('eAmt').value = '';
+        const entry = {
+            id: Date.now(),
+            time: new Date().toLocaleTimeString(),
+            date: new Date().toLocaleDateString(),
+            cust: name,
+            desc: document.getElementById('sDesc').value || 'Продажба',
+            docNum: document.getElementById('dNum').value || '',
+            price,
+            inCash,
+            inCard: card,
+            paid,
+            debt,
+            type
+        };
+        
+        // Зареждане и запис на данни
+        let data = loadData();
+        data.sales = data.sales || [];
+        data.history = data.history || {};
+        data.debts = data.debts || {};
+        
+        data.sales.unshift(entry);
+        
+        // История на клиента
+        if (!data.history[name]) data.history[name] = [];
+        data.history[name].unshift({
+            date: entry.date,
+            time: entry.time,
+            desc: entry.desc,
+            amt: price,
+            paid: paid,
+            debt: debt,
+            type: 'sale'
+        });
+        
+        // Актуализиране на дълга
+        data.debts[name] = (data.debts[name] || 0) + debt;
+        
+        saveData(data);
+        
+        // Синхронизация
+        sync(entry);
+        
+        // Нулиране на формата
+        resetForm();
         refresh();
+        showToast('Продажбата е записана!', 'success');
     }
-
+    
+    function deleteSale(id) {
+        if (!confirm('Сигурни ли сте, че искате да изтриете тази продажба?')) return;
+        
+        let data = loadData();
+        const saleIndex = data.sales.findIndex(s => s.id == id);
+        
+        if (saleIndex === -1) return;
+        
+        const sale = data.sales[saleIndex];
+        
+        // Възстановяване на дълга
+        if (sale.debt > 0 && sale.cust !== 'Анонимен') {
+            data.debts[sale.cust] = (data.debts[sale.cust] || 0) - sale.debt;
+            if (data.debts[sale.cust] <= 0) delete data.debts[sale.cust];
+        }
+        
+        // Премахване от историята
+        if (data.history[sale.cust]) {
+            data.history[sale.cust] = data.history[sale.cust].filter(h => 
+                !(h.date === sale.date && h.amt === sale.price && h.time === sale.time)
+            );
+        }
+        
+        // Премахване на продажбата
+        data.sales.splice(saleIndex, 1);
+        
+        saveData(data);
+        refresh();
+        showToast('Продажбата е изтрита', 'success');
+    }
+    
+    // ==================== РАЗХОДИ ====================
+    
+    function saveExpense() {
+        const desc = document.getElementById('eDesc').value.trim();
+        const amt = parseFloat(document.getElementById('eAmt').value);
+        
+        if (!desc) {
+            showToast('Моля, въведете основание!', 'error');
+            return;
+        }
+        
+        if (!amt || amt <= 0) {
+            showToast('Моля, въведете валидна сума!', 'error');
+            return;
+        }
+        
+        let data = loadData();
+        data.exps = data.exps || [];
+        
+        data.exps.unshift({
+            desc,
+            amt,
+            time: new Date().toLocaleTimeString(),
+            date: new Date().toLocaleDateString()
+        });
+        
+        saveData(data);
+        
+        document.getElementById('eDesc').value = '';
+        document.getElementById('eAmt').value = '';
+        
+        refresh();
+        showToast('Разходът е записан', 'success');
+    }
+    
+    // ==================== КЛИЕНТИ И ДЪЛГОВЕ ====================
+    
     function openDossier(name) {
         SEL_CUST = name;
-        const data = JSON.parse(localStorage.getItem(KEY));
-        const db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
-        const hist = data.history[name] || [];
+        const data = loadData();
+        const debts = data.debts || {};
+        const history = data.history[name] || [];
+        
         document.getElementById('dosName').textContent = 'Досие: ' + name;
-        document.getElementById('dosTotal').textContent = 'Общ дълг: ' + (db[name] || 0).toFixed(2) + ' €';
-        document.getElementById('dosHistory').innerHTML = hist.map(h => `
-            <div class="hist-row"><span>${h.date} - ${h.desc || 'Вноска'}</span><b style="color:${h.debt > 0 ? 'red' : 'green'}">${h.amt.toFixed(2)}€</b></div>
-        `).join('');
+        document.getElementById('dosTotal').innerHTML = `Общ дълг: <span style="color: ${debts[name] > 0 ? 'var(--danger)' : 'var(--success)'}">${(debts[name] || 0).toFixed(2)} €</span>`;
+        
+        const historyHtml = history.map(h => {
+            const isPositive = h.type === 'repay' || h.paid > 0;
+            return `
+                <div class="hist-row">
+                    <span>${h.date} ${h.time || ''}<br><small>${h.desc || ''}</small></span>
+                    <span class="${h.debt > 0 ? 'hist-negative' : 'hist-positive'}">
+                        ${h.amt ? h.amt.toFixed(2) + '€' : ''}
+                        ${h.paid ? '<br>Платено: ' + h.paid.toFixed(2) + '€' : ''}
+                    </span>
+                </div>
+            `;
+        }).join('') || '<div class="hist-row">Няма история</div>';
+        
+        document.getElementById('dosHistory').innerHTML = historyHtml;
         document.getElementById('dossierOverlay').style.display = 'flex';
+        document.getElementById('repayAmt').value = '';
     }
-
-    function closeDossier() { document.getElementById('dossierOverlay').style.display = 'none'; }
-
+    
+    function closeDossier() {
+        document.getElementById('dossierOverlay').style.display = 'none';
+        SEL_CUST = '';
+    }
+    
     function saveRepay() {
         const amt = parseFloat(document.getElementById('repayAmt').value);
-        if(!amt || !SEL_CUST) return;
-        let data = JSON.parse(localStorage.getItem(KEY));
-        const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), cust: SEL_CUST, desc: 'Погасяване дълг', price: 0, inCash: amt, inCard: 0, paid: amt, debt: -amt, type: 'CASH' };
+        
+        if (!amt || amt <= 0) {
+            showToast('Моля, въведете сума!', 'error');
+            return;
+        }
+        
+        if (!SEL_CUST) return;
+        
+        let data = loadData();
+        data.debts = data.debts || {};
+        data.sales = data.sales || [];
+        data.history = data.history || {};
+        
+        const currentDebt = data.debts[SEL_CUST] || 0;
+        
+        if (amt > currentDebt) {
+            if (!confirm(`Сумата (${amt}€) е по-голяма от дълга (${currentDebt}€). Да се продължи ли?`)) {
+                return;
+            }
+        }
+        
+        // Запис на плащането
+        const entry = {
+            id: Date.now(),
+            time: new Date().toLocaleTimeString(),
+            date: new Date().toLocaleDateString(),
+            cust: SEL_CUST,
+            desc: 'Погасяване на дълг',
+            price: 0,
+            inCash: amt,
+            inCard: 0,
+            paid: amt,
+            debt: 0,
+            type: 'REPAY'
+        };
+        
         data.sales.unshift(entry);
-        data.history[SEL_CUST].unshift({ date: new Date().toLocaleDateString(), desc: 'Вноска дълг', amt: amt, debt: 0 });
-        let db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
-        db[SEL_CUST] = Math.max(0, (db[SEL_CUST] || 0) - amt);
-        localStorage.setItem('ave_customers', JSON.stringify(db));
-        localStorage.setItem(KEY, JSON.stringify(data));
-        document.getElementById('repayAmt').value = '';
-        closeDossier(); refresh();
+        
+        // История
+        if (!data.history[SEL_CUST]) data.history[SEL_CUST] = [];
+        data.history[SEL_CUST].unshift({
+            date: entry.date,
+            time: entry.time,
+            desc: 'Вноска по дълг',
+            amt: amt,
+            paid: amt,
+            debt: 0,
+            type: 'repay'
+        });
+        
+        // Намаляване на дълга
+        data.debts[SEL_CUST] = Math.max(0, currentDebt - amt);
+        if (data.debts[SEL_CUST] === 0) delete data.debts[SEL_CUST];
+        
+        saveData(data);
+        
+        closeDossier();
+        refresh();
+        showToast('Плащането е записано', 'success');
     }
-
+    
+    function filterClients() {
+        const searchTerm = document.getElementById('searchClient').value.toLowerCase();
+        const clientElements = document.querySelectorAll('.client-entry');
+        
+        clientElements.forEach(el => {
+            const name = el.getAttribute('data-name') || '';
+            if (name.toLowerCase().includes(searchTerm) || searchTerm === '') {
+                el.style.display = 'flex';
+            } else {
+                el.style.display = 'none';
+            }
+        });
+    }
+    
+    // ==================== ТЪРСЕНЕ ====================
+    
     function searchCustomer(val) {
         const res = document.getElementById('custResults');
-        const db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
-        const names = Object.keys(db).filter(n => n.toLowerCase().includes(val.toLowerCase()));
-        if(val.length > 0 && names.length > 0) {
-            res.innerHTML = names.map(n => `<div class="s-item" onclick="setCust('${n}')">${n}</div>`).join('');
-            res.classList.remove('hidden');
-        } else res.classList.add('hidden');
-    }
-    function setCust(n) { document.getElementById('cName').value = n; document.getElementById('custResults').classList.add('hidden'); }
-
-    function refresh() {
-        const data = JSON.parse(localStorage.getItem(KEY) || '{"sales":[], "exps":[], "history":{}}');
-        const db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
+        const data = loadData();
+        const debts = data.debts || {};
         
-        document.getElementById('logEntries').innerHTML = data.sales.map(s => `
-            <div class="card" style="border-left: 5px solid ${s.debt>0?'red':'#22c55e'}">
-                <div style="display:flex; justify-content:space-between; font-size:0.8rem;"><b>${s.cust}</b> <span>${s.time}</span></div>
-                <div style="margin:5px 0;">${s.desc || 'Продажба'} - <b>${s.price.toFixed(2)}€</b></div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <small>Платено: ${s.paid.toFixed(2)}€ ${s.debt>0?`| <b style="color:red">Дълг: ${s.debt.toFixed(2)}€</b>`:''}</small>
-                    <button class="btn btn-viber" onclick="shareV('${s.id}')">💜 Viber</button>
-                </div>
-            </div>
-        `).join('');
-
-        document.getElementById('listClients').innerHTML = Object.keys(data.history).map(n => `
-            <div class="client-entry" onclick="openDossier('${n}')">
-                <div><b>${n}</b><small>История на плащанията</small></div>
-                <div class="debt">${(db[n] || 0).toFixed(2)} €</div>
-            </div>
-        `).join('');
-
-        const init = parseFloat(localStorage.getItem(KEY + '_init')) || 0;
-        const cash = data.sales.reduce((a, b) => a + b.inCash, 0);
-        const exps = data.exps.reduce((a, b) => a + b.amt, 0);
-        document.getElementById('finalCash').textContent = (init + cash - exps).toFixed(2) + ' EUR';
-        document.getElementById('reportStats').innerHTML = `🏁 Начало: ${init.toFixed(2)}€ | ➕ Приход: ${cash.toFixed(2)}€ | ➖ Разход: ${exps.toFixed(2)}€`;
-        document.getElementById('gUrl').value = localStorage.getItem(KEY + '_url') || '';
-        document.getElementById('iCash').value = init || 0;
+        const names = Object.keys(debts).filter(n => 
+            n.toLowerCase().includes(val.toLowerCase())
+        );
+        
+        if (val.length > 0 && names.length > 0) {
+            res.innerHTML = names.map(n => 
+                `<div class="s-item" onclick="setCust('${n.replace(/'/g, "\\'")}')">
+                    ${n} <span style="color: var(--danger);">(${(debts[n] || 0).toFixed(2)}€)</span>
+                </div>`
+            ).join('');
+            res.classList.remove('hidden');
+        } else {
+            res.classList.add('hidden');
+        }
     }
-
+    
+    function setCust(n) {
+        document.getElementById('cName').value = n;
+        document.getElementById('custResults').classList.add('hidden');
+    }
+    
+    // ==================== СПОДЕЛЯНЕ ====================
+    
     function shareV(id) {
-        const s = JSON.parse(localStorage.getItem(KEY)).sales.find(x => x.id == id);
-        const txt = `🧾 *РАЗПИСКА: ${LOC}*\n👤 Клиент: ${s.cust}\n📅 Дата: ${s.date} ${s.time}\n💰 Сума: ${s.price.toFixed(2)}€\n💵 ПЛАТЕНО: ${s.paid.toFixed(2)}€\n--------------------------\n${s.debt > 0 ? `⚠️ ОСТАТЪК: ${s.debt.toFixed(2)}€` : '✅ ПЛАТЕНО'}`;
+        const data = loadData();
+        const s = data.sales.find(x => x.id == id);
+        
+        if (!s) return;
+        
+        const txt = `🧾 *${LOC}*\n` +
+                    `👤 Клиент: ${s.cust}\n` +
+                    `📅 ${s.date} ${s.time}\n` +
+                    `📦 ${s.desc || 'Продажба'}\n` +
+                    `💰 Сума: ${s.price.toFixed(2)}€\n` +
+                    `💳 Платено: ${s.paid.toFixed(2)}€\n` +
+                    `${s.docNum ? '🧾 Док. №: ' + s.docNum + '\n' : ''}` +
+                    `--------------------------\n` +
+                    `${s.debt > 0 ? `⚠️ ОСТАТЪК: ${s.debt.toFixed(2)}€` : '✅ ПОЧЕТЕН'}`;
+        
         window.open(`viber://forward?text=${encodeURIComponent(txt)}`);
     }
-
+    
+    // ==================== СИНХРОНИЗАЦИЯ ====================
+    
     async function sync(entry) {
-        const url = document.getElementById('gUrl').value; if(!url) return;
-        document.getElementById('syncStatus').textContent = '⌛ Синхрон...';
-        try { 
-            await fetch(url, { method: 'POST', mode: 'no-cors', body: JSON.stringify({loc: LOC, entry}) }); 
-            document.getElementById('syncStatus').textContent = '✅ Облак: ОК';
-            document.getElementById('syncStatus').style.color = 'green';
-        } catch(e){ document.getElementById('syncStatus').textContent = '❌ Грешка'; }
+        const data = loadData();
+        const url = data.config?.gUrl;
+        
+        if (!url) return;
+        
+        const statusEl = document.getElementById('syncStatus');
+        statusEl.textContent = '⌛ Синхрон...';
+        statusEl.style.color = 'orange';
+        
+        try {
+            // Бележка: no-cors не позволява четене на отговор
+            await fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    loc: LOC,
+                    entry: entry,
+                    timestamp: new Date().toISOString()
+                })
+            });
+            
+            statusEl.textContent = '✅ Облак';
+            statusEl.style.color = 'green';
+        } catch (e) {
+            console.error('Sync error:', e);
+            statusEl.textContent = '❌ Грешка';
+            statusEl.style.color = 'red';
+        }
     }
-
-    function goTab(t, el) {
-        ['tabSales', 'tabClients', 'tabReport'].forEach(id => document.getElementById(id).classList.add('hidden'));
-        document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('hidden');
+    
+    // ==================== ОПРЕСНЯВАНЕ ====================
+    
+    function refresh() {
+        const data = loadData();
+        const sales = data.sales || [];
+        const exps = data.exps || [];
+        const debts = data.debts || {};
+        const config = data.config || {};
+        
+        // Лог на продажби
+        document.getElementById('logEntries').innerHTML = sales.map(s => {
+            const debtClass = s.debt > 0 ? 'debt' : 'paid';
+            return `
+                <div class="card sale-item ${debtClass}" style="border-left-color: ${s.debt > 0 ? 'var(--danger)' : 'var(--success)'};">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                        <b>${escapeHtml(s.cust)}</b>
+                        <span>${s.time}</span>
+                    </div>
+                    <div style="margin:5px 0;">
+                        ${escapeHtml(s.desc || 'Продажба')} - <b>${s.price.toFixed(2)}€</b>
+                        ${s.docNum ? `<br><small>Док. №: ${escapeHtml(s.docNum)}</small>` : ''}
+                    </div>
+                    <div>
+                        <small>Платено: ${s.paid.toFixed(2)}€</small>
+                        ${s.debt > 0 ? `<small style="color:var(--danger);"> | Дълг: ${s.debt.toFixed(2)}€</small>` : ''}
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-small btn-viber" onclick="shareV(${s.id})">💜 Viber</button>
+                        <button class="btn-small btn-expense" onclick="deleteSale(${s.id})">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('') || '<div class="card">Няма продажби за днес</div>';
+        
+        // Списък клиенти
+        const clientNames = [...new Set([...Object.keys(debts), ...Object.keys(data.history || {})])];
+        
+        document.getElementById('listClients').innerHTML = clientNames
+            .sort((a, b) => (debts[b] || 0) - (debts[a] || 0))
+            .map(n => `
+                <div class="client-entry" data-name="${escapeHtml(n)}" onclick="openDossier('${n.replace(/'/g, "\\'")}')">
+                    <div>
+                        <b>${escapeHtml(n)}</b><br>
+                        <small>${(data.history[n] || []).length} транзакции</small>
+                    </div>
+                    <div class="debt">${(debts[n] || 0).toFixed(2)} €</div>
+                </div>
+            `).join('') || '<div class="card">Няма клиенти</div>';
+        
+        // Каса и отчет
+        const init = parseFloat(config.initCash) || 0;
+        const cashIncome = sales.reduce((a, b) => a + (b.inCash || 0), 0);
+        const cardIncome = sales.reduce((a, b) => a + (b.inCard || 0), 0);
+        const totalExpense = exps.reduce((a, b) => a + (b.amt || 0), 0);
+        const totalDebt = Object.values(debts).reduce((a, b) => a + (b || 0), 0);
+        
+        const finalCash = init + cashIncome - totalExpense;
+        
+        document.getElementById('finalCash').textContent = finalCash.toFixed(2) + ' EUR';
+        document.getElementById('reportStats').innerHTML = `
+            🏁 Начало: ${init.toFixed(2)}€<br>
+            ➕ Кеш: ${cashIncome.toFixed(2)}€<br>
+            💳 Карта: ${cardIncome.toFixed(2)}€<br>
+            ➖ Разход: ${totalExpense.toFixed(2)}€<br>
+            ⚠️ Дългове: ${totalDebt.toFixed(2)}€
+        `;
+        
+        // Детайлна статистика
+        const salesCount = sales.length;
+        const expCount = exps.length;
+        const avgTicket = salesCount > 0 ? (sales.reduce((a, b) => a + b.price, 0) / salesCount).toFixed(2) : 0;
+        
+        document.getElementById('detailedStats').innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div><small>Брой продажби:</small><br><b>${salesCount}</b></div>
+                <div><small>Брой разходи:</small><br><b>${expCount}</b></div>
+                <div><small>Ср. чек:</small><br><b>${avgTicket}€</b></div>
+                <div><small>Общ оборот:</small><br><b>${(cashIncome + cardIncome).toFixed(2)}€</b></div>
+            </div>
+        `;
+    }
+    
+    // ==================== НАВИГАЦИЯ ====================
+    
+    function goTab(tabName, element) {
+        // Скриване на всички табове
+        document.getElementById('tabSales').classList.add('hidden');
+        document.getElementById('tabClients').classList.add('hidden');
+        document.getElementById('tabReport').classList.add('hidden');
+        
+        // Показване на избрания таб
+        const tabId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+        document.getElementById(tabId).classList.remove('hidden');
+        
+        // Актуализиране на активния бутон
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
+        if (element) element.classList.add('active');
+        
+        // Опресняване при нужда
+        if (tabName === 'report' || tabName === 'clients') {
+            refresh();
+        }
     }
-    function switchTabSettings(t, el) { goTab(t, el); refresh(); }
-    function saveConf() { localStorage.setItem(KEY + '_url', document.getElementById('gUrl').value); localStorage.setItem(KEY + '_init', document.getElementById('iCash').value); refresh(); }
-    function resetForm() { ['cName','dNum','sDesc','sPrice','cAmt','hAmt'].forEach(id => document.getElementById(id).value = ''); document.getElementById('calcLabel').style.display='none'; }
-    function clearAll() { if(confirm('Нулиране на деня?')) { localStorage.removeItem(KEY); refresh(); } }
+    
+    // ==================== КОНФИГУРАЦИЯ ====================
+    
+    function saveConf() {
+        let data = loadData();
+        data.config = data.config || {};
+        
+        data.config.gUrl = document.getElementById('gUrl').value.trim();
+        data.config.initCash = parseFloat(document.getElementById('iCash').value) || 0;
+        
+        saveData(data);
+        refresh();
+        showToast('Настройките са запазени', 'success');
+    }
+    
+    // ==================== ЕКСПОРТ ====================
+    
+    function exportData() {
+        const data = loadData();
+        const exportObj = {
+            location: LOC,
+            date: new Date().toLocaleDateString(),
+            time: new Date().toLocaleTimeString(),
+            data: data
+        };
+        
+        const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ave_export_${LOC}_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+        showToast('Експортът е готов', 'success');
+    }
+    
+    // ==================== НУЛИРАНЕ ====================
+    
+    function clearAll() {
+        if (confirm('Нулиране на деня? Всички данни ще бъдат изтрити!')) {
+            localStorage.removeItem(KEY);
+            refresh();
+            showToast('Денят е нулиран', 'success');
+        }
+    }
+    
+    // ==================== ПОМОЩНИ ====================
+    
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    
+    function resetForm() {
+        ['cName', 'dNum', 'sDesc', 'sPrice', 'cAmt', 'hAmt'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('calcLabel').style.display = 'none';
+        document.getElementById('pType').value = 'CASH';
+        document.getElementById('cashFields').style.display = 'block';
+    }
+    
+    // Инициализация при зареждане
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.form-group')) {
+            document.getElementById('custResults').classList.add('hidden');
+        }
+    });
 </script>
 </body>
 </html>

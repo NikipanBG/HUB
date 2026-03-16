@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AVE Pro V15 - ULTIMATE</title>
+    <style>
+        :root { --primary: #2563eb; --viber: #7360f2; --success: #22c55e; --danger: #ef4444; --dark: #1e293b; --bg: #f8fafc; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); padding-bottom: 80px; color: #334155; }
+        
+        .container { padding: 12px; max-width: 600px; margin: 0 auto; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #e2e8f0; position: relative; }
+        
+        header { background: white; padding: 12px; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        .loc-title { font-weight: bold; color: var(--primary); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        label { display: block; font-size: 0.75rem; margin-bottom: 4px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 10px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        
+        .btn { border: none; border-radius: 8px; padding: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-viber { background: var(--viber); color: white; padding: 6px 12px; width: auto; font-size: 0.8rem; }
+        .btn-expense { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; border-top: 1px solid #e2e8f0; height: 70px; z-index: 1000; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; color: #64748b; cursor: pointer; }
+        .nav-item.active { color: var(--primary); border-top: 3px solid var(--primary); background: #f0f7ff; }
+
+        .client-entry { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid #cbd5e1; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .client-entry .debt { color: var(--danger); font-weight: bold; font-size: 1.1rem; }
+
+        #dossierOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 15px; }
+        .modal { background: white; width: 100%; max-width: 500px; border-radius: 15px; padding: 20px; max-height: 85vh; overflow-y: auto; position: relative; }
+        .hist-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 0.85rem; }
+
+        .search-results { position: absolute; background: white; width: 100%; border: 1px solid #ddd; z-index: 1100; top: 65px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 150px; overflow-y: auto; }
+        .s-item { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+
+        .report-dark { background: var(--dark); color: white; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .hidden { display: none; }
+        #loginScreen { position: fixed; inset: 0; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="card" style="width: 90%; max-width: 350px; text-align:center;">
+        <h2 style="margin-bottom:20px;">AVE Pro V15</h2>
+        <input type="password" id="passCode" placeholder="Парола...">
+        <button class="btn btn-primary" onclick="checkLogin()">ВЛЕЗ</button>
+    </div>
+</div>
+
+<header>
+    <div class="loc-title" id="locDisplay">Обект: -</div>
+    <div id="syncStatus" style="font-size:0.65rem; color:orange;">● Офлайн</div>
+</header>
+
+<div id="dossierOverlay">
+    <div class="modal">
+        <button style="position:absolute; right:15px; top:15px; background:none; border:none; font-size:1.5rem;" onclick="closeDossier()">×</button>
+        <h3 id="dosName">Досие на клиент</h3>
+        <div id="dosTotal" style="margin:15px 0; padding:10px; background: #fef2f2; border-radius:8px; color:red; font-weight:bold;"></div>
+        <div id="dosHistory" style="margin-bottom:20px; border-top:1px solid #eee;"></div>
+        <div style="border-top:2px solid #eee; padding-top:15px;">
+            <label>Погасяване на дълг (EUR)</label>
+            <div class="grid-2">
+                <input type="number" id="repayAmt" placeholder="Сума...">
+                <button class="btn btn-primary" style="background:var(--success);" onclick="saveRepay()">ПЛАТИ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div id="tabSales">
+        <div class="card">
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Клиент</label>
+                    <input type="text" id="cName" placeholder="Име..." oninput="searchCustomer(this.value)" autocomplete="off">
+                    <div id="custResults" class="search-results hidden"></div>
+                </div>
+                <div class="form-group"><label>Документ №</label><input type="text" id="dNum" placeholder="Ф-ра / No..."></div>
+            </div>
+            <div class="form-group"><label>Артикул / Описание</label><input type="text" id="sDesc" placeholder="Артикул..."></div>
+            <div class="grid-2">
+                <div class="form-group"><label>Цена EUR</label><input type="number" id="sPrice" step="0.01" oninput="doCalc()"></div>
+                <div class="form-group">
+                    <label>Тип</label>
+                    <select id="pType" onchange="doCalc()"><option value="CASH">Брой/Карта</option><option value="BANK">Банка</option><option value="COD">Наложен</option></select>
+                </div>
+            </div>
+            <div id="cashFields">
+                <div class="grid-2">
+                    <div class="form-group"><label>С Карта (EUR)</label><input type="number" id="cAmt" value="0" oninput="doCalc()"></div>
+                    <div class="form-group"><label>Даден Кеш</label><input type="number" id="hAmt" placeholder="0.00" oninput="doCalc()"></div>
+                </div>
+                <div id="calcLabel" style="padding:10px; border-radius:8px; margin-bottom:12px; text-align:center; font-weight:bold; display:none;"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveSale()">💾 ЗАПИШИ ПРОДАЖБА</button>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--danger);">
+            <label>Нов Разход (Служебен)</label>
+            <div class="grid-2">
+                <input type="text" id="eDesc" placeholder="Основание...">
+                <input type="number" id="eAmt" placeholder="Сума...">
+            </div>
+            <button class="btn btn-expense" onclick="saveExpense()">💸 ЗАПИШИ РАЗХОД</button>
+        </div>
+        <div id="logEntries"></div>
+    </div>
+
+    <div id="tabClients" class="hidden">
+        <div id="listClients"></div>
+    </div>
+
+    <div id="tabReport" class="hidden">
+        <div class="report-dark">
+            <small>КАСОВА НАЛИЧНОСТ</small>
+            <h2 id="finalCash" style="color:var(--success); font-size:2.2rem; margin:10px 0;">0.00 EUR</h2>
+            <div id="reportStats" style="font-size:0.9rem; opacity:0.8; line-height:1.5;"></div>
+        </div>
+        <div class="card">
+            <label>Google Script URL</label>
+            <input type="text" id="gUrl" onchange="saveConf()">
+            <label>Начална каса за деня</label>
+            <input type="number" id="iCash" step="0.01" onchange="saveConf()">
+        </div>
+        <button class="btn" style="background:#fee2e2; color:var(--danger);" onclick="clearAll()">🗑️ НУЛИРАЙ ДЕНЯ</button>
+    </div>
+</div>
+
+<nav class="nav-bar">
+    <div class="nav-item active" onclick="goTab('sales', this)">🛒 Каса</div>
+    <div class="nav-item" onclick="goTab('clients', this)">👥 Клиенти</div>
+    <div class="nav-item" onclick="switchTabSettings('report', this)">📊 Отчет</div>
+</nav>
+
+<script>
+    const PWD = { 'sklad': 'Склад', 'magazin1': 'Магазин 1' };
+    let KEY = '', LOC = '', SEL_CUST = '';
+
+    function checkLogin() {
+        const p = document.getElementById('passCode').value.toLowerCase();
+        if(PWD[p]) {
+            LOC = PWD[p]; KEY = 'ave_v15_' + p;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('locDisplay').textContent = 'Обект: ' + LOC;
+            refresh();
+        } else alert('Грешна парола!');
+    }
+
+    function doCalc() {
+        const total = parseFloat(document.getElementById('sPrice').value) || 0;
+        const card = parseFloat(document.getElementById('cAmt').value) || 0;
+        const handed = parseFloat(document.getElementById('hAmt').value) || 0;
+        const label = document.getElementById('calcLabel');
+        const net = total - card;
+        if(net <= 0 || document.getElementById('pType').value !== 'CASH') { label.style.display = 'none'; return; }
+        label.style.display = 'block';
+        if(handed >= net) {
+            label.style.background = '#dcfce7'; label.style.color = '#166534';
+            label.textContent = `РЕСТО: ${(handed - net).toFixed(2)}€`;
+        } else {
+            label.style.background = '#fef2f2'; label.style.color = '#991b1b';
+            label.textContent = `ДЪЛГ: ${(net - handed).toFixed(2)}€`;
+        }
+    }
+
+    function saveSale() {
+        const name = document.getElementById('cName').value || 'Анонимен';
+        const price = parseFloat(document.getElementById('sPrice').value) || 0;
+        const card = parseFloat(document.getElementById('cAmt').value) || 0;
+        const handed = parseFloat(document.getElementById('hAmt').value) || 0;
+        const type = document.getElementById('pType').value;
+        const inCash = (type === 'CASH') ? Math.min(handed, (price - card)) : 0;
+        const debt = (type === 'CASH') ? Math.max(0, (price - card - handed)) : 0;
+        const paid = inCash + card;
+
+        const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString(), cust: name, desc: document.getElementById('sDesc').value, price, inCash, inCard: card, paid, debt, type };
+
+        let data = JSON.parse(localStorage.getItem(KEY) || '{"sales":[], "exps":[], "history":{}}');
+        data.sales.unshift(entry);
+        if(!data.history[name]) data.history[name] = [];
+        data.history[name].unshift({ date: entry.date, desc: entry.desc, amt: price, debt: debt });
+
+        let db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
+        db[name] = (db[name] || 0) + debt;
+        
+        localStorage.setItem('ave_customers', JSON.stringify(db));
+        localStorage.setItem(KEY, JSON.stringify(data));
+        sync(entry); resetForm(); refresh();
+    }
+
+    function saveExpense() {
+        const desc = document.getElementById('eDesc').value;
+        const amt = parseFloat(document.getElementById('eAmt').value);
+        if(!desc || !amt) return;
+        let data = JSON.parse(localStorage.getItem(KEY));
+        data.exps.unshift({ desc, amt, time: new Date().toLocaleTimeString() });
+        localStorage.setItem(KEY, JSON.stringify(data));
+        document.getElementById('eDesc').value = ''; document.getElementById('eAmt').value = '';
+        refresh();
+    }
+
+    function openDossier(name) {
+        SEL_CUST = name;
+        const data = JSON.parse(localStorage.getItem(KEY));
+        const db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
+        const hist = data.history[name] || [];
+        document.getElementById('dosName').textContent = 'Досие: ' + name;
+        document.getElementById('dosTotal').textContent = 'Общ дълг: ' + (db[name] || 0).toFixed(2) + ' €';
+        document.getElementById('dosHistory').innerHTML = hist.map(h => `
+            <div class="hist-row"><span>${h.date} - ${h.desc || 'Вноска'}</span><b style="color:${h.debt > 0 ? 'red' : 'green'}">${h.amt.toFixed(2)}€</b></div>
+        `).join('');
+        document.getElementById('dossierOverlay').style.display = 'flex';
+    }
+
+    function closeDossier() { document.getElementById('dossierOverlay').style.display = 'none'; }
+
+    function saveRepay() {
+        const amt = parseFloat(document.getElementById('repayAmt').value);
+        if(!amt || !SEL_CUST) return;
+        let data = JSON.parse(localStorage.getItem(KEY));
+        const entry = { id: Date.now(), time: new Date().toLocaleTimeString(), cust: SEL_CUST, desc: 'Погасяване дълг', price: 0, inCash: amt, inCard: 0, paid: amt, debt: -amt, type: 'CASH' };
+        data.sales.unshift(entry);
+        data.history[SEL_CUST].unshift({ date: new Date().toLocaleDateString(), desc: 'Вноска дълг', amt: amt, debt: 0 });
+        let db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
+        db[SEL_CUST] = Math.max(0, (db[SEL_CUST] || 0) - amt);
+        localStorage.setItem('ave_customers', JSON.stringify(db));
+        localStorage.setItem(KEY, JSON.stringify(data));
+        document.getElementById('repayAmt').value = '';
+        closeDossier(); refresh();
+    }
+
+    function searchCustomer(val) {
+        const res = document.getElementById('custResults');
+        const db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
+        const names = Object.keys(db).filter(n => n.toLowerCase().includes(val.toLowerCase()));
+        if(val.length > 0 && names.length > 0) {
+            res.innerHTML = names.map(n => `<div class="s-item" onclick="setCust('${n}')">${n}</div>`).join('');
+            res.classList.remove('hidden');
+        } else res.classList.add('hidden');
+    }
+    function setCust(n) { document.getElementById('cName').value = n; document.getElementById('custResults').classList.add('hidden'); }
+
+    function refresh() {
+        const data = JSON.parse(localStorage.getItem(KEY) || '{"sales":[], "exps":[], "history":{}}');
+        const db = JSON.parse(localStorage.getItem('ave_customers') || '{}');
+        
+        document.getElementById('logEntries').innerHTML = data.sales.map(s => `
+            <div class="card" style="border-left: 5px solid ${s.debt>0?'red':'#22c55e'}">
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem;"><b>${s.cust}</b> <span>${s.time}</span></div>
+                <div style="margin:5px 0;">${s.desc || 'Продажба'} - <b>${s.price.toFixed(2)}€</b></div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <small>Платено: ${s.paid.toFixed(2)}€ ${s.debt>0?`| <b style="color:red">Дълг: ${s.debt.toFixed(2)}€</b>`:''}</small>
+                    <button class="btn btn-viber" onclick="shareV('${s.id}')">💜 Viber</button>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('listClients').innerHTML = Object.keys(data.history).map(n => `
+            <div class="client-entry" onclick="openDossier('${n}')">
+                <div><b>${n}</b><small>История на плащанията</small></div>
+                <div class="debt">${(db[n] || 0).toFixed(2)} €</div>
+            </div>
+        `).join('');
+
+        const init = parseFloat(localStorage.getItem(KEY + '_init')) || 0;
+        const cash = data.sales.reduce((a, b) => a + b.inCash, 0);
+        const exps = data.exps.reduce((a, b) => a + b.amt, 0);
+        document.getElementById('finalCash').textContent = (init + cash - exps).toFixed(2) + ' EUR';
+        document.getElementById('reportStats').innerHTML = `🏁 Начало: ${init.toFixed(2)}€ | ➕ Приход: ${cash.toFixed(2)}€ | ➖ Разход: ${exps.toFixed(2)}€`;
+        document.getElementById('gUrl').value = localStorage.getItem(KEY + '_url') || '';
+        document.getElementById('iCash').value = init || 0;
+    }
+
+    function shareV(id) {
+        const s = JSON.parse(localStorage.getItem(KEY)).sales.find(x => x.id == id);
+        const txt = `🧾 *РАЗПИСКА: ${LOC}*\n👤 Клиент: ${s.cust}\n📅 Дата: ${s.date} ${s.time}\n💰 Сума: ${s.price.toFixed(2)}€\n💵 ПЛАТЕНО: ${s.paid.toFixed(2)}€\n--------------------------\n${s.debt > 0 ? `⚠️ ОСТАТЪК: ${s.debt.toFixed(2)}€` : '✅ ПЛАТЕНО'}`;
+        window.open(`viber://forward?text=${encodeURIComponent(txt)}`);
+    }
+
+    async function sync(entry) {
+        const url = document.getElementById('gUrl').value; if(!url) return;
+        document.getElementById('syncStatus').textContent = '⌛ Синхрон...';
+        try { 
+            await fetch(url, { method: 'POST', mode: 'no-cors', body: JSON.stringify({loc: LOC, entry}) }); 
+            document.getElementById('syncStatus').textContent = '✅ Облак: ОК';
+            document.getElementById('syncStatus').style.color = 'green';
+        } catch(e){ document.getElementById('syncStatus').textContent = '❌ Грешка'; }
+    }
+
+    function goTab(t, el) {
+        ['tabSales', 'tabClients', 'tabReport'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('hidden');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+    }
+    function switchTabSettings(t, el) { goTab(t, el); refresh(); }
+    function saveConf() { localStorage.setItem(KEY + '_url', document.getElementById('gUrl').value); localStorage.setItem(KEY + '_init', document.getElementById('iCash').value); refresh(); }
+    function resetForm() { ['cName','dNum','sDesc','sPrice','cAmt','hAmt'].forEach(id => document.getElementById(id).value = ''); document.getElementById('calcLabel').style.display='none'; }
+    function clearAll() { if(confirm('Нулиране на деня?')) { localStorage.removeItem(KEY); refresh(); } }
+</script>
+</body>
+</html>

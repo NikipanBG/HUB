@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>AUTOZONE 33 HUB • Всички инструменти</title>
+    <title>AUTOZONE 33 HUB • Всички инструменти (7 приложения)</title>
     <style>
         * {
             margin: 0;
@@ -82,7 +82,7 @@
             max-width: 1200px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
             padding: 8px 0 20px;
         }
@@ -115,6 +115,7 @@
 
         /* Индивидуални акцент цветове */
         .app-card[data-app="pacing"] { border-left-color: #2a5298; }
+        .app-card[data-app="pacing9"] { border-left-color: #8e44ad; } /* нов виолетов за v9 */
         .app-card[data-app="cash"] { border-left-color: #2563eb; }
         .app-card[data-app="battery"] { border-left-color: #667eea; }
         .app-card[data-app="fleet"] { border-left-color: #1a237e; }
@@ -235,19 +236,19 @@
 <body>
 
 <div class="hub-header">
-    <h1>⚡ AUTOZONE 33 · ИНТЕГРИРАН ХЪБ</h1>
+    <h1>⚡ AUTOZONE 33 · ИНТЕГРИРАН ХЪБ (7 в 1)</h1>
     <p>Всички професионални инструменти на едно място</p>
     <div class="company-bar">
         <span>📍 София, ул. Мюнхен 14</span>
         <span>📞 02 479 45 45</span>
         <span>📧 office@avtozona33.com</span>
-        <span class="stats-mini">🔋 6 активни модула</span>
+        <span class="stats-mini">🔋 7 активни модула</span>
     </div>
 </div>
 
 <div class="app-grid">
     
-    <!-- 1. PACKING LIST / ПАЛЕТИЗАЦИЯ -->
+    <!-- 1. PACKING LIST V8 (оригинал) -->
     <a class="app-card" data-app="pacing" href="#" onclick="openApp('PacinglistV8.html'); return false;">
         <div class="app-icon">📦⚡</div>
         <div class="app-title">
@@ -263,12 +264,33 @@
             <span class="tag">📦 ПАЛЕТИ</span>
         </div>
         <div class="app-footer">
-            <span>✅ А4 / 100×150 mm</span>
+            <span>✅ A4 / 100×150 mm</span>
             <span class="launch-btn">СТАРТ</span>
         </div>
     </a>
 
-    <!-- 2. КАСОВ ОТЧЕТ / AVE PRO V15 -->
+    <!-- 2. PACKING LIST V9 (КОРИГИРАНА) - НОВО -->
+    <a class="app-card" data-app="pacing9" href="#" onclick="openApp('PakinglistV9.html'); return false;">
+        <div class="app-icon">📦🔄</div>
+        <div class="app-title">
+            Autozone 33 Pro
+            <span class="app-version">v9.0 (коригиран)</span>
+        </div>
+        <div class="app-desc">
+            Подобрена версия с корекции в печата: обобщение по митнически код, двойна таблица (BG/EN), подобрено форматиране.
+        </div>
+        <div class="app-tags">
+            <span class="tag">📋 ПАКИНГ ЛИСТ+</span>
+            <span class="tag">🔄 ОБОБЩЕНИЕ</span>
+            <span class="tag">📊 ДВОЙНА ТАБЛИЦА</span>
+        </div>
+        <div class="app-footer">
+            <span>✅ A4 / 100×150 mm</span>
+            <span class="launch-btn">СТАРТ</span>
+        </div>
+    </a>
+
+    <!-- 3. КАСОВ ОТЧЕТ / AVE PRO V15 -->
     <a class="app-card" data-app="cash" href="#" onclick="openApp('kasov-otchet-online V3.01.html'); return false;">
         <div class="app-icon">💶📊</div>
         <div class="app-title">
@@ -289,7 +311,7 @@
         </div>
     </a>
 
-    <!-- 3. СРАВНЕНИЕ НА ЦЕНИ / АКУМУЛАТОРИ -->
+    <!-- 4. СРАВНЕНИЕ НА ЦЕНИ / АКУМУЛАТОРИ -->
     <a class="app-card" data-app="battery" href="#" onclick="openApp('Battery price pro V4 final.html'); return false;">
         <div class="app-icon">🔋📉</div>
         <div class="app-title">
@@ -310,7 +332,7 @@
         </div>
     </a>
 
-    <!-- 4. AUTO FLEET MANAGER PRO -->
+    <!-- 5. AUTO FLEET MANAGER PRO -->
     <a class="app-card" data-app="fleet" href="#" onclick="openApp('autofleet PRO.html'); return false;">
         <div class="app-icon">🚛📅</div>
         <div class="app-title">
@@ -331,11 +353,11 @@
         </div>
     </a>
 
-    <!-- 5.  / НАЛИЧНОСТ v11.2 -->
+    <!-- 6. МОТО АВЕ / НАЛИЧНОСТ v11.2 -->
     <a class="app-card" data-app="stock" href="#" onclick="openApp('Nalichnost V12 Avtozona33 final.html'); return false;">
         <div class="app-icon">📦🔍</div>
         <div class="app-title">
-            НАЛИЧНОСТ
+            Мото Аве
             <span class="app-version">v11.2</span>
         </div>
         <div class="app-desc">
@@ -352,7 +374,7 @@
         </div>
     </a>
 
-    <!-- 6. B2B ПОРЪЧКИ / АВТОЗОНА 33 -->
+    <!-- 7. B2B ПОРЪЧКИ / АВТОЗОНА 33 -->
     <a class="app-card" data-app="b2b" href="#" onclick="openApp('Order b2b.html'); return false;">
         <div class="app-icon">🛒📋</div>
         <div class="app-title">
@@ -376,40 +398,42 @@
 
 <div class="footer-note">
     ⚙️ Всички инструменти работят напълно офлайн (с изключение на външни връзки) · Данните се съхраняват локално във вашия браузър<br>
-    © 2025 Autozone 33 · Интегриран хъб версия 1.0
+    © 2025 Autozone 33 · Интегриран хъб версия 2.0 (7 приложения)
 </div>
 
 <script>
-    // Отваряне на приложение в нова подложка (iframe стил или нов раздел)
+    // Списък с всички приложения за проверка
+    const appFiles = [
+        'PacinglistV8.html',
+        'PakinglistV9.html',
+        'kasov-otchet-online V3.01.html',
+        'Battery price pro V4 final.html',
+        'autofleet PRO.html',
+        'Nalichnost V12 Avtozona33 final.html',
+        'Order b2b.html'
+    ];
+
+    // Отваряне на приложение в нов раздел
     function openApp(filename) {
-        // Проверка дали файлът съществува — ако не, питаме за потвърждение
-        const apps = [
-            'PacinglistV8.html',
-            'kasov-otchet-online V3.01.html',
-            'Battery price pro V4 final.html',
-            'autofleet PRO.html',
-            'Nalichnost V12 Avtozona33 final.html',
-            'Order b2b.html'
-        ];
+        // Проверка дали файлът съществува (опционално - можем да добавим проверка)
+        console.log('Стартиране на:', filename);
         
-        // Можем да отворим в нов прозорец/раздел (target blank) – линковете вече имат <base target="_blank">
-        // Но за по-добро UX отваряме в нов раздел:
-        const url = filename;
+        // Отваряне в нов раздел
+        window.open(filename, '_blank')?.focus();
         
-        // Проверка дали сме в среда с ограничени файлове (local) – просто опитваме да отворим
-        window.open(url, '_blank')?.focus();
-        
-        // Лек feedback
-        showToast(`Стартиране на ${filename.replace('.html','')}...`);
+        // Показване на toast съобщение
+        showToast(`🚀 Стартиране на ${filename.replace('.html', '').substring(0, 25)}...`);
         return false;
     }
 
-    // Прост тост (нямаме глобален контейнер, можем да ползваме alert или да създадем)
+    // Показване на toast съобщение
     function showToast(msg) {
-        if (typeof console !== 'undefined') console.log('🔹 ' + msg);
-        // Може да се добави визуален toast, но за простота ползваме кратък alert? Нека не дразним.
-        // Създаваме временно popup съобщение
+        // Премахваме съществуващ toast ако има
+        const existingToast = document.querySelector('.custom-toast');
+        if (existingToast) existingToast.remove();
+
         const toast = document.createElement('div');
+        toast.className = 'custom-toast';
         toast.innerText = msg;
         toast.style.position = 'fixed';
         toast.style.bottom = '20px';
@@ -423,21 +447,54 @@
         toast.style.zIndex = '9999';
         toast.style.fontWeight = '500';
         toast.style.letterSpacing = '0.3px';
+        toast.style.animation = 'fadeInOut 2s ease forwards';
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
+
+        // Добавяме анимация
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 2000);
     }
 
-    // Добавяне на лек анимационен ефект при зареждане
+    // Логване при зареждане
     window.addEventListener('load', function() {
-        // Малък поздрав в конзолата
-        console.log('🚀 AUTOZONE 33 HUB зареден — всички 6 инструмента са достъпни!');
+        console.log('🚀 AUTOZONE 33 HUB v2.0 зареден — 7 инструмента на разположение!');
+        
+        // Проверка дали всички файлове съществуват (само конзолен лог)
+        appFiles.forEach(file => {
+            fetch(file, { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        console.warn(`⚠️ Файлът ${file} не е намерен!`);
+                    } else {
+                        console.log(`✅ ${file} - OK`);
+                    }
+                })
+                .catch(() => console.warn(`⚠️ Файлът ${file} не може да бъде достъпен`));
+        });
     });
 
-    // Функция за бързо търсене (ако искаме) – не е задължителна
-    // Но можем да имплементираме филтър в бъдеще
+    // Поддръжка на тъч устройства
+    document.querySelectorAll('.app-card').forEach(card => {
+        card.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.98)';
+        });
+        card.addEventListener('touchend', function() {
+            this.style.transform = '';
+        });
+    });
 </script>
 
-<!-- Допълнително: ако искаме някои от приложенията да се отварят в iframe (не, ползваме нов таб) -->
-<!-- всичко е готово -->
 </body>
 </html>

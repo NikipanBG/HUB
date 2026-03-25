@@ -3,986 +3,731 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Наличност v13.0 - Оферти с история</title>
+    <title>Наличност v14.3 - Стабилна версия</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --p: #667eea; --s: #764ba2; --ok: #48bb78; --warn: #ed8936; --err: #e53e3e; --bg: #f4f7f9; --card: #ffffff; --text: #333333; --border: #dddddd; }
+        :root { --p: #667eea; --s: #764ba2; --ok: #48bb78; --warn: #ed8936; --err: #e53e3e; --bg: #f4f7f9; --card: #ffffff; --text: #2d3748; --border: #e2e8f0; }
         [data-theme="dark"] { --bg: #1a202c; --card: #2d3748; --text: #f7fafc; --border: #4a5568; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); padding-bottom: 100px; min-height: 100vh; }
-        .header { background: linear-gradient(135deg, var(--p), var(--s)); color: white; padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 90px; min-height: 100vh; transition: background 0.3s; }
+        
+        /* Layout & Header */
+        .header { background: linear-gradient(135deg, var(--p), var(--s)); color: white; padding: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .stat-card { background: rgba(255,255,255,0.15); padding: 8px; border-radius: 10px; text-align: center; }
-        .stat-value { font-weight: bold; font-size: 1rem; }
-        .stat-label { font-size: 0.6rem; opacity: 0.9; }
+        .stat-card { background: rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; text-align: center; backdrop-filter: blur(5px); }
+        .stat-value { font-weight: bold; font-size: 0.9rem; }
+        .stat-label { font-size: 0.6rem; text-transform: uppercase; opacity: 0.9; }
+
+        /* Controls */
         .controls { background: var(--card); padding: 12px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-        #searchInput { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid var(--p); background: var(--bg); color: var(--text); font-size: 16px; outline: none; }
+        #searchInput { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--border); background: var(--bg); color: var(--text); font-size: 16px; transition: border-color 0.2s; }
+        #searchInput:focus { border-color: var(--p); outline: none; }
         .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        select { padding: 12px; border-radius: 8px; background: var(--bg); color: var(--text); border: 1px solid var(--border); font-size: 0.85rem; width: 100%; }
-        .filters-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0; }
-        .chip { background: var(--bg); padding: 8px 15px; border-radius: 20px; font-size: 0.75rem; white-space: nowrap; border: 1px solid var(--border); cursor: pointer; }
-        .chip.active { background: var(--p); color: white; }
-        .product-card { background: var(--card); margin: 10px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid transparent; position: relative; }
-        .critical { border-left-color: var(--err); background: #fff5f5; }
-        [data-theme="dark"] .critical { background: #3a2a2a; }
-        .p-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; }
-        .p-code { font-weight: bold; background: #edf2f7; padding: 3px 8px; border-radius: 5px; }
-        .stock-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; }
-        .s-v { font-size: 1.1rem; font-weight: bold; }
-        .s-v.needed { color: var(--err); }
-        .price-info { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.8rem; padding: 8px; background: var(--bg); border-radius: 5px; }
-        .price-field { display: flex; flex-direction: column; align-items: center; flex: 1; }
-        .price-value { font-weight: bold; font-size: 0.9rem; }
-        .price-label { font-size: 0.6rem; opacity: 0.7; }
-        .price-separator { width: 1px; background: var(--border); margin: 0 10px; }
-        .blurred { filter: blur(4px); user-select: none; }
-        #uploadZone { text-align:center; padding:40px; border:2px dashed var(--border); margin:20px; border-radius:20px; cursor: pointer; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card); padding: 20px; border-radius: 12px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; }
-        .modal input, .modal textarea, .modal select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .modal button { flex: 1; min-width: 100px; padding: 10px; border: none; border-radius: 5px; cursor: pointer; }
-        .btn-primary { background: var(--p); color: white; }
-        .btn-success { background: var(--ok); color: white; }
-        .btn-warning { background: var(--warn); color: white; }
-        .btn-danger { background: var(--err); color: white; }
-        .coin-slider { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
-        .coin-btn { flex: 1; min-width: 60px; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; cursor: pointer; }
-        .coin-btn.active { background: var(--p); color: white; }
-        #uploadZone { display: none; }
-        .price-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-        .price-box { flex: 1; text-align: center; }
-        .price-box .label { font-size: 0.65rem; opacity: 0.7; }
-        .price-box .value { font-weight: bold; font-size: 0.9rem; }
+        select { padding: 10px; border-radius: 8px; background: var(--bg); color: var(--text); border: 1px solid var(--border); cursor: pointer; }
+
+        /* Product Cards */
+        .product-card { background: var(--card); margin: 10px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; border-left: 4px solid transparent; cursor: pointer; transition: transform 0.1s; }
+        .product-card:active { transform: scale(0.98); }
+        .critical { border-left-color: var(--err); background: rgba(229, 62, 62, 0.05); }
+        .p-code { font-weight: bold; background: var(--bg); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; display: inline-block; }
+        .stock-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+        .s-v { font-size: 1rem; font-weight: bold; text-align: center; }
+        .s-l { font-size: 0.6rem; text-align: center; color: #718096; }
+        .needed { color: var(--err); }
+
+        /* Navigation */
+        .nav-tabs { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; border-top: 1px solid var(--border); z-index: 200; height: 70px; }
+        .nav-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; color: var(--text); opacity: 0.6; cursor: pointer; transition: all 0.2s; }
+        .nav-tab.active { opacity: 1; color: var(--p); border-top: 3px solid var(--p); }
+        .nav-tab .icon { font-size: 1.4rem; }
+        .nav-tab .label { font-size: 0.7rem; font-weight: bold; }
+
+        /* Utilities */
+        .chip { background: var(--bg); padding: 6px 12px; border-radius: 15px; font-size: 0.75rem; border: 1px solid var(--border); cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .chip.active { background: var(--p); color: white; border-color: var(--p); }
+        .chip:hover { opacity: 0.8; }
+        #uploadZone { text-align:center; padding:30px; border:2px dashed var(--p); margin:20px; border-radius:15px; background: var(--card); cursor: pointer; transition: all 0.2s; }
+        #uploadZone:hover { background: rgba(102, 126, 234, 0.05); border-color: var(--s); }
         
-        /* Чекбокс за маркиране */
-        .product-checkbox { position: absolute; top: 15px; right: 15px; z-index: 10; }
-        .product-checkbox input { width: 22px; height: 22px; cursor: pointer; accent-color: var(--p); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; padding: 15px; backdrop-filter: blur(3px); }
+        .modal-content { background: var(--card); padding: 20px; border-radius: 15px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         
-        /* Бар за избрани продукти */
-        .selected-bar { 
-            position: fixed; bottom: 0; left: 0; right: 0; 
-            background: var(--card); 
-            border-top: 2px solid var(--p); 
-            padding: 10px 15px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 90;
+        /* Selected Bar */
+        .selected-bar { position: fixed; bottom: 80px; left: 10px; right: 10px; background: var(--p); color: white; padding: 12px 20px; border-radius: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 150; }
+        .offer-btn { background: white; color: var(--p); border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
+        .offer-btn:active { transform: scale(0.95); }
+
+        /* Offer cards */
+        .offer-card { background: var(--card); margin: 10px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; }
+        .offer-card:hover { transform: translateX(5px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .offer-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+        .offer-client { font-weight: bold; font-size: 1rem; }
+        .offer-date { font-size: 0.75rem; color: var(--p); }
+        .offer-total { font-size: 1.1rem; font-weight: bold; color: var(--ok); }
+        .offer-notes { font-size: 0.75rem; color: gray; margin-top: 5px; }
+        .delete-offer-btn { background: none; border: none; color: var(--err); font-size: 0.7rem; cursor: pointer; padding: 5px 10px; margin-top: 8px; border-radius: 5px; }
+        .delete-offer-btn:hover { background: rgba(229, 62, 62, 0.1); }
+        
+        .offer-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .offer-table th, .offer-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
+        .offer-table th { background: var(--p); color: white; }
+        
+        .empty-state { text-align: center; padding: 50px; color: gray; }
+        .price-badge { font-size: 0.85rem; font-weight: bold; color: var(--p); margin-top: 5px; }
+        .delivery-price { font-size: 0.7rem; color: gray; margin-top: 3px; }
+        
+        /* Стилове само за печат - скриват всичко освен офертата */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #offerPreviewModal,
+            #offerPreviewModal * {
+                visibility: visible;
+            }
+            #offerPreviewModal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                margin: 0;
+                padding: 20px;
+                background: white;
+                display: block !important;
+                overflow: auto;
+                z-index: 9999;
+            }
+            .modal-content {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+                background: white;
+            }
+            .no-print,
+            .no-print *,
+            button,
+            .nav-tabs,
+            .header,
+            .controls,
+            .selected-bar {
+                display: none !important;
+            }
+            .offer-table th,
+            .offer-table td {
+                border: 1px solid #ddd;
+            }
         }
-        .selected-count { font-weight: bold; color: var(--p); }
-        .selected-total { font-weight: bold; }
-        .offer-btn { background: var(--p); color: white; border: none; padding: 10px 20px; border-radius: 25px; font-weight: bold; cursor: pointer; }
-        
-        /* Оферта стилове */
-        .offer-header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--p); }
-        .offer-title { font-size: 1.5rem; font-weight: bold; color: var(--p); }
-        .offer-company { font-size: 1.2rem; font-weight: bold; }
-        .offer-details { display: flex; justify-content: space-between; margin: 15px 0; padding: 10px; background: var(--bg); border-radius: 5px; flex-wrap: wrap; gap: 10px; }
-        .offer-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.9rem; }
-        .offer-table th { background: var(--p); color: white; padding: 8px; text-align: left; }
-        .offer-table td { padding: 8px; border-bottom: 1px solid var(--border); }
-        .offer-table tr:last-child td { border-bottom: none; }
-        .offer-total { font-size: 1.2rem; font-weight: bold; text-align: right; margin-top: 15px; padding-top: 10px; border-top: 2px solid var(--p); }
-        .offer-footer { margin-top: 30px; font-size: 0.8rem; text-align: center; color: gray; }
-        
-        /* История на оферти */
-        .history-list { max-height: 400px; overflow-y: auto; }
-        .history-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 12px; 
-            border-bottom: 1px solid var(--border); 
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .history-item:hover { background: var(--bg); }
-        .history-item.selected { background: var(--p); color: white; }
-        .history-date { font-weight: bold; }
-        .history-client { flex: 2; margin-left: 15px; }
-        .history-total { font-weight: bold; }
-        .history-actions { display: flex; gap: 5px; }
-        .history-actions button { 
-            padding: 5px 10px; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            background: var(--p); 
-            color: white;
-            font-size: 0.8rem;
-        }
-        
-        .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
-        .quantity-input { width: 70px; padding: 5px; border: 1px solid var(--border); border-radius: 4px; text-align: center; }
-        
-        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; background: var(--bg); }
-        .tab-btn.active { background: var(--p); color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>Наличност v13.0</h2>
-        <div>
-            <button onclick="toggleTheme()" style="background:none; border:none; font-size:20px; color:white;">🌓</button>
-            <button onclick="showPriceDialog()" style="background:none; border:none; font-size:20px; color:white;">💰</button>
-            <button onclick="showHistoryDialog()" style="background:none; border:none; font-size:20px; color:white;">📋</button>
+<div id="productsView">
+    <div class="header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="font-size: 1.2rem;">📦 Складова Наличност</h2>
+            <div>
+                <button onclick="toggleTheme()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;">🌓</button>
+                <button onclick="showPriceDialog()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; margin-left:10px;">🔐</button>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat-card">
+                <div id="statCount" class="stat-value">0</div>
+                <div class="stat-label">Артикула</div>
+            </div>
+            <div class="stat-card">
+                <div id="statValue" class="stat-value">0.00</div>
+                <div class="stat-label">Стойност</div>
+            </div>
+            <div class="stat-card">
+                <div id="statProfit" class="stat-value">0.00</div>
+                <div class="stat-label">Печалба</div>
+            </div>
         </div>
     </div>
-    <div class="stats">
-        <div class="stat-card">
-            <div id="statCount" class="stat-value">0</div>
-            <div class="stat-label">АРТИКУЛА</div>
+
+    <div class="controls">
+        <input type="search" id="searchInput" placeholder="Търсене по код или име..." oninput="handleSearch()">
+        <div class="filter-grid">
+            <select id="subGroupFilter" onchange="updateDynamicFilters(); handleSearch();"><option value="">Всички групи</option></select>
+            <select id="brandFilter" onchange="handleSearch()"><option value="">Всички марки</option></select>
         </div>
-        <div class="stat-card">
-            <div id="statValue" class="stat-value">0 EUR.</div>
-            <div class="stat-label">СТОЙНОСТ</div>
-        </div>
-        <div class="stat-card">
-            <div id="statProfit" class="stat-value">0 EUR.</div>
-            <div class="stat-label">ПЕЧАЛБА</div>
+        <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:5px;">
+            <div class="chip" id="chipInStock" onclick="toggleChip('inStock')">✅ Налични</div>
+            <div class="chip" id="chipRestock" onclick="toggleChip('restock')">⚠️ Зареждане</div>
+            <div class="chip" onclick="showSelectedOnly()">⭐ Маркирани</div>
+            <div class="chip" onclick="clearSelected()">🗑️ Изчисти</div>
+            <div class="chip" onclick="clearData()" style="color:var(--err)">🗑️ Нов файл</div>
         </div>
     </div>
+
+    <div id="uploadZone" onclick="document.getElementById('fileIn').click()">
+        <p style="font-weight:bold; color:var(--p);">📁 Кликнете за качване на Excel</p>
+        <p style="font-size:0.75rem; margin-top:5px; color:gray;">Колони: Код, Стока, Група, Склад, 305, 309, Доставна, Продажна</p>
+        <input type="file" id="fileIn" hidden accept=".xlsx, .xls, .csv" onchange="handleFile(event)">
+    </div>
+
+    <div id="list"></div>
 </div>
 
-<div class="controls">
-    <input type="search" id="searchInput" placeholder="Търси модел или код..." oninput="handleSearch()">
-    
-    <div class="filter-grid">
-        <select id="subGroupFilter" onchange="updateDynamicFilters(); handleSearch();">
-            <option value="">Подгрупа (Всички)</option>
-        </select>
-        <select id="brandFilter" onchange="handleSearch()">
-            <option value="">Производител (Всички)</option>
-        </select>
+<div id="offersView" style="display:none;">
+    <div class="header">
+        <h2 style="font-size: 1.2rem;">📄 Моите Оферти</h2>
+        <div class="stats">
+            <div class="stat-card"><div id="offerStatCount" class="stat-value">0</div><div class="stat-label">Брой</div></div>
+            <div class="stat-card"><div id="offerStatTotal" class="stat-value">0.00</div><div class="stat-label">Общо</div></div>
+            <div class="stat-card"><div id="offerStatMonth" class="stat-value">0</div><div class="stat-label">Този месец</div></div>
+        </div>
     </div>
-
-    <div class="filter-grid">
-        <select id="locationFilter" onchange="handleSearch()">
-            <option value="">Всички обекти</option>
-            <option value="w">Склад</option>
-            <option value="m1">305</option>
-            <option value="m2">309</option>
-        </select>
-        <button class="chip" style="width:100%" onclick="clearData()">🗑️ Нов файл</button>
-    </div>
-    
-    <div class="filters-scroll">
-        <div class="chip" id="chipInStock" onclick="toggleChip('inStock')">✅ Налични</div>
-        <div class="chip" id="chipRestock" onclick="toggleChip('restock')">⚠️ За Трансфер</div>
-        <div class="chip" onclick="showSelectedOnly()">⭐ Маркирани</div>
-        <div class="chip" onclick="clearSelected()">🗑️ Изчисти маркирани</div>
-        <div class="chip" onclick="showHistoryDialog()">📋 История</div>
-    </div>
+    <div id="offersListContainer" style="padding: 10px;"></div>
 </div>
 
-<div id="uploadZone" onclick="document.getElementById('fileIn').click()">
-    <p>📁 Докосни за качване на файл</p>
-    <input type="file" id="fileIn" hidden onchange="handleFile(event)">
-</div>
-
-<div id="list"></div>
-
-<!-- Бар за маркирани продукти -->
 <div id="selectedBar" class="selected-bar" style="display: none;">
-    <div>
-        <span class="selected-count" id="selectedCount">0</span> маркирани продукта |
-        <span class="selected-total" id="selectedTotal">0.00 EUR.</span>
-    </div>
-    <button class="offer-btn" onclick="showOfferDialog()">📄 Изготви оферта</button>
+    <div id="selectedInfo">0 избрани артикула</div>
+    <button class="offer-btn" onclick="finishSelection()">📄 Създай оферта</button>
 </div>
 
-<!-- Modal за цени -->
+<div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchView('products')" id="tabProducts">
+        <span class="icon">📦</span><span class="label">ПРОДУКТИ</span>
+    </button>
+    <button class="nav-tab" onclick="switchView('offers')" id="tabOffers">
+        <span class="icon">📄</span><span class="label">ОФЕРТИ</span>
+    </button>
+</div>
+
 <div id="priceModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-bottom:15px;">🔐 Въведи парола</h3>
-        <input type="password" id="pricePassword" placeholder="Парола" autocomplete="off">
-        
-        <div style="margin:15px 0;">
-            <div style="margin-bottom:5px;">Надценка %:</div>
-            <div class="coin-slider">
-                <button class="coin-btn" onclick="setCoefficient(5)">+5%</button>
-                <button class="coin-btn" onclick="setCoefficient(10)">+10%</button>
-                <button class="coin-btn" onclick="setCoefficient(20)">+20%</button>
-                <button class="coin-btn" onclick="setCoefficient(0)">0%</button>
-            </div>
-            <input type="number" id="priceCoeff" value="0" min="0" max="1000" step="0.1" style="margin-top:10px;" placeholder="Процент">
-        </div>
-        
-        <div class="modal-buttons">
-            <button onclick="closePriceModal()">Отказ</button>
-            <button class="btn-primary" onclick="unlockPrices()">Приложи</button>
+        <h3>🔐 Ценова защита</h3>
+        <input type="password" id="pricePassword" placeholder="Парола" style="width:100%; padding:12px; margin:15px 0; border-radius:8px; border:1px solid var(--border);">
+        <div class="filter-grid" style="gap:10px;">
+            <button onclick="closePriceModal()" style="padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">Отказ</button>
+            <button onclick="unlockPrices()" style="padding:10px; border-radius:8px; border:none; background:var(--p); color:white; cursor:pointer;">Вход</button>
         </div>
     </div>
 </div>
 
-<!-- Modal за оферта -->
-<div id="offerModal" class="modal">
+<div id="createOfferModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-bottom:15px;">📄 Изготвяне на оферта</h3>
+        <h3>📄 Детайли на офертата</h3>
+        <input type="text" id="offerClient" placeholder="Име на клиент" style="width:100%; padding:10px; margin-top:10px; border-radius:5px; border:1px solid var(--border);">
         
-        <label>Клиент:</label>
-        <input type="text" id="offerClient" placeholder="Име на клиент" value="Клиент">
-        
-        <label>Валидност (дни):</label>
-        <input type="number" id="offerValidity" value="14" min="1" max="90">
-        
-        <label>Допълнителна информация:</label>
-        <textarea id="offerNotes" rows="2" placeholder="Бележки..."></textarea>
-        
-        <div style="margin:15px 0;">
-            <h4>Количества:</h4>
-            <div id="offerQuantities"></div>
+        <div style="margin:10px 0;">
+            <label style="font-size:0.8rem;">Надценка (%):</label>
+            <div style="display:flex; gap:8px; margin-top:5px; flex-wrap:wrap;">
+                <button type="button" onclick="setMarkup(0)" class="markup-btn" style="padding:6px 12px; border-radius:5px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">0%</button>
+                <button type="button" onclick="setMarkup(5)" class="markup-btn" style="padding:6px 12px; border-radius:5px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">+5%</button>
+                <button type="button" onclick="setMarkup(10)" class="markup-btn" style="padding:6px 12px; border-radius:5px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">+10%</button>
+                <button type="button" onclick="setMarkup(20)" class="markup-btn" style="padding:6px 12px; border-radius:5px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">+20%</button>
+                <input type="number" id="markupPercent" value="0" min="0" max="200" step="0.5" style="width:80px; padding:6px; border-radius:5px; border:1px solid var(--border); text-align:center;">
+            </div>
         </div>
         
-        <div class="modal-buttons">
-            <button onclick="closeOfferModal()">Отказ</button>
-            <button class="btn-success" onclick="generateOffer()">📄 Преглед</button>
+        <textarea id="offerNotes" placeholder="Бележки към офертата..." style="width:100%; padding:10px; margin:10px 0; border-radius:5px; border:1px solid var(--border);" rows="3"></textarea>
+        <div id="offerItemsReview" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:5px; padding:5px; margin-bottom:15px;"></div>
+        <div class="filter-grid" style="gap:10px;">
+            <button onclick="closeModal('createOfferModal')" style="padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">Отказ</button>
+            <button onclick="createOffer()" style="padding:10px; border-radius:8px; border:none; background:var(--ok); color:white; cursor:pointer;">✅ Запази оферта</button>
         </div>
     </div>
 </div>
 
-<!-- Modal за преглед на оферта -->
 <div id="offerPreviewModal" class="modal">
     <div class="modal-content" style="max-width: 800px;">
         <div id="offerPreviewContent"></div>
-        <div class="modal-buttons">
-            <button onclick="closeOfferPreview()">Затвори</button>
-            <button class="btn-primary" onclick="printOffer()">🖨️ Печат</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal за история -->
-<div id="historyModal" class="modal">
-    <div class="modal-content" style="max-width: 800px;">
-        <h3 style="margin-bottom:15px;">📋 История на офертите</h3>
-        
-        <div class="tab-buttons">
-            <button class="tab-btn active" onclick="switchHistoryTab('list')">Списък</button>
-            <button class="tab-btn" onclick="switchHistoryTab('stats')">Статистика</button>
-        </div>
-        
-        <!-- Таб за списък -->
-        <div id="historyListTab" class="tab-content active">
-            <div id="historyList" class="history-list">
-                <!-- Тук ще се показват офертите -->
-            </div>
-        </div>
-        
-        <!-- Таб за статистика -->
-        <div id="historyStatsTab" class="tab-content">
-            <div id="historyStats">
-                <!-- Тук ще се показва статистика -->
-            </div>
-        </div>
-        
-        <div class="modal-buttons">
-            <button onclick="closeHistoryModal()">Затвори</button>
-            <button class="btn-danger" onclick="clearAllHistory()">🗑️ Изчисти история</button>
+        <div style="display:flex; gap:10px; margin-top:20px;" class="no-print">
+            <button onclick="closeModal('offerPreviewModal')" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">Затвори</button>
+            <button onclick="printOfferOnly()" style="flex:1; padding:12px; border-radius:8px; background:var(--p); color:white; border:none; cursor:pointer;">🖨️ Печат / PDF</button>
         </div>
     </div>
 </div>
 
 <script>
+    // Configuration & State
     let inventory = [];
-    let pricesVisible = false;
-    let priceCoeff = 0;
-    let activeFilters = { inStock: false, restock: false };
     let selectedProducts = new Set();
-    let offerQuantities = {};
-    let offerHistory = []; // Масив за съхранение на оферти
+    let offerHistory = [];
+    let pricesVisible = false;
+    let activeFilters = { inStock: false, restock: false };
+    let currentMarkup = 0;
+    const STORAGE_KEY = 'ave_inv_v14_data';
+    const OFFERS_KEY = 'ave_inv_v14_offers';
 
     window.onload = () => {
         if(localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+        loadData();
+        renderOffersList();
         
-        // Зареждане на историята
-        const savedHistory = localStorage.getItem('ave_offer_history_v13');
-        if (savedHistory) {
-            offerHistory = JSON.parse(savedHistory);
+        const markupInput = document.getElementById('markupPercent');
+        if (markupInput) {
+            markupInput.addEventListener('input', function() {
+                const val = parseFloat(this.value);
+                if (!isNaN(val)) {
+                    currentMarkup = val;
+                    updateOfferReview();
+                }
+            });
         }
-        
-        const saved = localStorage.getItem('ave_pro_inv_v13');
-        if (saved) { 
-            inventory = JSON.parse(saved); 
-            initFilters(); 
-            handleSearch(); 
-        } else { 
-            document.getElementById('uploadZone').style.display = 'block'; 
-        }
-        
-        updateSelectedBar();
     };
 
+    function loadData() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            const savedOffers = localStorage.getItem(OFFERS_KEY);
+            if (saved) {
+                inventory = JSON.parse(saved);
+                document.getElementById('uploadZone').style.display = 'none';
+                initFilters();
+                handleSearch();
+            }
+            if (savedOffers) offerHistory = JSON.parse(savedOffers);
+        } catch (e) {
+            console.error("Грешка при зареждане на данни", e);
+        }
+    }
+
     function handleFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const workbook = XLSX.read(new Uint8Array(evt.target.result), {type: 'array'});
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
-            processData(rows);
+            try {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: ""});
+                processData(rows);
+            } catch(err) {
+                alert("Грешка при четене: " + err.message);
+            }
         };
-        reader.readAsArrayBuffer(e.target.files[0]);
+        reader.readAsArrayBuffer(file);
     }
 
     function processData(rows) {
-        let hIdx = rows.findIndex(r => r && r.some(c => String(c).toLowerCase().includes('стока')));
-        const h = rows[hIdx].map(c => String(c || '').toLowerCase().trim());
-        const find = (keys) => h.findIndex(x => keys.some(k => x.includes(k)));
+        if (rows.length < 2) return alert("Файлът е празен");
+        
+        let headerRow = rows[0];
+        let headerIndex = 0;
+        for (let i = 0; i < Math.min(rows.length, 5); i++) {
+            const rowStr = rows[i]?.join(' ').toLowerCase() || '';
+            if (rowStr.includes('код') && (rowStr.includes('стока') || rowStr.includes('наименование'))) {
+                headerRow = rows[i];
+                headerIndex = i;
+                break;
+            }
+        }
+        
+        const headers = headerRow.map(h => String(h).toLowerCase().trim());
+        const getIdx = (names) => headers.findIndex(h => names.some(n => h.includes(n)));
 
-        inventory = rows.slice(hIdx + 1).filter(r => r[find(['стока'])]).map(r => {
-            const groupPath = String(r[find(['група'])] || 'Други').split('/');
+        const idx = {
+            code: getIdx(['код', 'code', 'ref', 'артикул']),
+            name: getIdx(['стока', 'наименование', 'name', 'product', 'описание']),
+            group: getIdx(['група', 'group', 'категория']),
+            w: getIdx(['склад', 'stock', 'наличност']),
+            m1: getIdx(['305', 'м305', 'магазин 305']),
+            m2: getIdx(['309', 'м309', 'магазин 309']),
+            pc: getIdx(['доставна', 'покупна', 'cost']),
+            ps: getIdx(['продажна', 'цена', 'price'])
+        };
+
+        if (idx.code === -1 || idx.name === -1) {
+            alert("Не са намерени основните колони (Код, Стока)\nПроверете дали заглавията са на български.");
+            return;
+        }
+
+        inventory = rows.slice(headerIndex + 1).filter(r => r[idx.code] && r[idx.name]).map(r => {
+            const groupPath = String(r[idx.group] || 'Други/Общи/Други').split('/');
             return {
-                code: String(r[find(['код'])] || ''),
-                name: String(r[find(['стока'])] || ''),
-                subGroup: groupPath[1] || 'Общи',
+                code: String(r[idx.code]).trim(),
+                name: String(r[idx.name]).trim(),
+                group: groupPath[1] || groupPath[0] || 'Общи',
                 brand: groupPath[2] || 'Други',
-                w: parseFloat(r[find(['склад'])] || 0),
-                m1: parseFloat(r[find(['305', 'магазин 305'])] || 0),
-                m2: parseFloat(r[find(['309', 'магазин 309'])] || 0),
-                pc: parseFloat(String(r[find(['доставна'])] || 0).replace(',','.')) || 0,
-                ps: parseFloat(String(r[find(['продажна'])] || 0).replace(',','.')) || 0
+                w: parseFloat(String(r[idx.w] || '0').replace(',', '.')) || 0,
+                m1: parseFloat(String(r[idx.m1] || '0').replace(',', '.')) || 0,
+                m2: parseFloat(String(r[idx.m2] || '0').replace(',', '.')) || 0,
+                pc: parseFloat(String(r[idx.pc] || '0').replace(',', '.')) || 0,
+                ps: parseFloat(String(r[idx.ps] || '0').replace(',', '.')) || 0
             };
         });
-        localStorage.setItem('ave_pro_inv_v13', JSON.stringify(inventory));
+
+        if (inventory.length === 0) {
+            alert("Няма валидни данни за зареждане");
+            return;
+        }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
+        alert(`Успешно заредени ${inventory.length} артикула`);
         location.reload();
     }
 
-    function initFilters() {
-        const subGroups = [...new Set(inventory.map(i => i.subGroup))].sort();
-        const sgSelect = document.getElementById('subGroupFilter');
-        sgSelect.innerHTML = '<option value="">Подгрупа (Всички)</option>' + 
-            subGroups.map(g => `<option value="${g}">${g}</option>`).join('');
-        
-        updateDynamicFilters();
-    }
-
-    function updateDynamicFilters() {
-        const selectedSG = document.getElementById('subGroupFilter').value;
-        const brandSelect = document.getElementById('brandFilter');
-        const currentBrand = brandSelect.value;
-
-        const relevantBrands = [...new Set(
-            inventory
-            .filter(i => !selectedSG || i.subGroup === selectedSG)
-            .map(i => i.brand)
-        )].sort();
-
-        brandSelect.innerHTML = '<option value="">Производител (Всички)</option>' + 
-            relevantBrands.map(b => `<option value="${b}">${b}</option>`).join('');
-        
-        if (relevantBrands.includes(currentBrand)) brandSelect.value = currentBrand;
-    }
-
     function handleSearch() {
-        const q = document.getElementById('searchInput').value.toLowerCase();
-        const sg = document.getElementById('subGroupFilter').value;
-        const br = document.getElementById('brandFilter').value;
-        const loc = document.getElementById('locationFilter').value;
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const group = document.getElementById('subGroupFilter').value;
+        const brand = document.getElementById('brandFilter').value;
 
         const filtered = inventory.filter(i => {
-            if (sg && i.subGroup !== sg) return false;
-            if (br && i.brand !== br) return false;
-            if (loc && i[loc] <= 0) return false;
-            if (activeFilters.inStock && (i.w + i.m1 + i.m2) <= 0) return false;
-            if (activeFilters.restock && !(i.w > 0 && (i.m1 <= 0 || i.m2 <= 0))) return false;
-            return (i.name + i.code).toLowerCase().includes(q);
+            const matchesSearch = i.name.toLowerCase().includes(query) || i.code.toLowerCase().includes(query);
+            const matchesGroup = !group || i.group === group;
+            const matchesBrand = !brand || i.brand === brand;
+            const matchesStock = !activeFilters.inStock || (i.w + i.m1 + i.m2 > 0);
+            const matchesCritical = !activeFilters.restock || (i.w > 0 && (i.m1 <= 0 || i.m2 <= 0));
+            return matchesSearch && matchesGroup && matchesBrand && matchesStock && matchesCritical;
         });
 
         renderList(filtered);
         updateStats(filtered);
     }
 
-    function updateStats(data) {
-        let totalValue = 0;
-        let totalProfit = 0;
-        
-        data.forEach(i => {
-            totalValue += (i.ps * (i.w + i.m1 + i.m2));
-            totalProfit += ((i.ps - i.pc) * (i.w + i.m1 + i.m2));
-        });
-        
-        document.getElementById('statCount').textContent = data.length;
-        
-        const valueEl = document.getElementById('statValue');
-        valueEl.textContent = pricesVisible ? totalValue.toFixed(2) + ' EUR.' : '***** EUR.';
-        if (!pricesVisible) valueEl.classList.add('blurred');
-        else valueEl.classList.remove('blurred');
-        
-        const profitEl = document.getElementById('statProfit');
-        profitEl.textContent = pricesVisible ? totalProfit.toFixed(2) + ' EUR.' : '***** EUR.';
-        if (!pricesVisible) profitEl.classList.add('blurred');
-        else profitEl.classList.remove('blurred');
-    }
-
-    function toggleProduct(code) {
-        if (selectedProducts.has(code)) {
-            selectedProducts.delete(code);
-        } else {
-            selectedProducts.add(code);
-        }
-        
-        const selectedArray = Array.from(selectedProducts);
-        localStorage.setItem('ave_selected_v13', JSON.stringify(selectedArray));
-        
-        const checkbox = document.getElementById('cb_' + code);
-        if (checkbox) checkbox.checked = selectedProducts.has(code);
-        
-        updateSelectedBar();
-    }
-
-    function updateSelectedBar() {
-        const bar = document.getElementById('selectedBar');
-        const countEl = document.getElementById('selectedCount');
-        const totalEl = document.getElementById('selectedTotal');
-        
-        if (selectedProducts.size === 0) {
-            bar.style.display = 'none';
-            return;
-        }
-        
-        bar.style.display = 'flex';
-        countEl.textContent = selectedProducts.size;
-        
-        let total = 0;
-        inventory.forEach(item => {
-            if (selectedProducts.has(item.code)) {
-                total += item.ps;
-            }
-        });
-        
-        totalEl.textContent = total.toFixed(2) + ' EUR.';
-    }
-
-    function clearSelected() {
-        if (confirm('Изчистване на всички маркирани продукти?')) {
-            selectedProducts.clear();
-            localStorage.removeItem('ave_selected_v13');
-            
-            document.querySelectorAll('.product-checkbox input').forEach(cb => {
-                cb.checked = false;
-            });
-            
-            updateSelectedBar();
-        }
-    }
-
-    function showSelectedOnly() {
-        if (selectedProducts.size === 0) {
-            alert('Няма маркирани продукти!');
-            return;
-        }
-        
-        const filtered = inventory.filter(i => selectedProducts.has(i.code));
-        renderList(filtered);
-        updateStats(filtered);
+    function getRecommendedPrice(item) {
+        if (item.ps && item.ps > 0) return item.ps;
+        return item.pc * 2;
     }
 
     function renderList(data) {
         const list = document.getElementById('list');
+        if (!list) return;
+        
         list.innerHTML = data.map(i => {
-            const isCritical = i.w > 0 && (i.m1 <= 0 || i.m2 <= 0);
-            const pcWithMarkup = i.pc * (1 + priceCoeff/100);
-            const profit = i.ps - pcWithMarkup;
             const isSelected = selectedProducts.has(i.code);
+            const recommendedPrice = getRecommendedPrice(i);
+            const isAutoPrice = (i.ps === 0 || !i.ps);
             
             return `
-                <div class="product-card ${isCritical ? 'critical' : ''}">
-                    <div class="product-checkbox">
-                        <input type="checkbox" id="cb_${i.code}" ${isSelected ? 'checked' : ''} onchange="toggleProduct('${i.code}')">
-                    </div>
-                    
-                    <div class="p-header">
-                        <div class="p-code">${i.code}</div>
-                        ${pricesVisible ? `
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <span style="color:var(--warn); font-size:0.7rem;">+${priceCoeff}%</span>
-                        </div>
-                        ` : ''}
-                    </div>
-                    
-                    <div style="font-weight:bold; font-size:0.95rem; margin-bottom:8px; padding-right: 30px;">${i.name}</div>
-                    
-                    ${pricesVisible ? `
-                    <div class="price-row" style="margin-bottom:10px;">
-                        <div class="price-box">
-                            <div class="label">🚚 Доставна</div>
-                            <div class="value">${i.pc.toFixed(2)} EUR.</div>
-                        </div>
-                        <div style="font-size:1.2rem; color:var(--p);">→</div>
-                        <div class="price-box">
-                            <div class="label">💰 С надценка ${priceCoeff}%</div>
-                            <div class="value" style="color:var(--p); font-weight:bold;">${pcWithMarkup.toFixed(2)} EUR.</div>
-                        </div>
-                    </div>
-                    
-                    <div class="price-info">
-                        <div class="price-field">
-                            <span class="price-label">Препоръчителна</span>
-                            <span class="price-value">${i.ps.toFixed(2)} EUR.</span>
-                        </div>
-                        <div class="price-separator"></div>
-                        <div class="price-field">
-                            <span class="price-label">Печалба</span>
-                            <span class="price-value ${profit < 0 ? 'needed' : ''}">${profit.toFixed(2)} EUR.</span>
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <div style="font-size:0.7rem; color:gray; margin:8px 0 4px;">${i.subGroup} > ${i.brand}</div>
-                    
-                    <div class="stock-grid">
-                        <div class="stock-item">
-                            <div class="s-v">${pricesVisible ? i.w : '***'}</div>
-                            <div class="s-l">СКЛАД</div>
-                        </div>
-                        <div class="stock-item">
-                            <div class="s-v ${i.w > 0 && i.m1 <= 0 ? 'needed' : ''}">${pricesVisible ? i.m1 : '***'}</div>
-                            <div class="s-l">305</div>
-                        </div>
-                        <div class="stock-item">
-                            <div class="s-v ${i.w > 0 && i.m2 <= 0 ? 'needed' : ''}">${pricesVisible ? i.m2 : '***'}</div>
-                            <div class="s-l">309</div>
-                        </div>
-                    </div>
-                </div>`;
-        }).join('');
-    }
-
-    function clearData() { 
-        if(confirm("Изтриване на текущата база и качване на нов файл?")) { 
-            localStorage.removeItem('ave_pro_inv_v13'); 
-            localStorage.removeItem('ave_selected_v13');
-            location.reload(); 
-        } 
-    }
-    
-    function toggleTheme() { 
-        document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); 
-        localStorage.setItem('theme', document.body.getAttribute('data-theme')); 
-    }
-    
-    function toggleChip(t) { 
-        activeFilters[t] = !activeFilters[t]; 
-        document.getElementById('chip'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active'); 
-        handleSearch(); 
-    }
-
-    function showPriceDialog() {
-        document.getElementById('priceModal').style.display = 'flex';
-        document.getElementById('pricePassword').value = '';
-        document.getElementById('priceCoeff').value = priceCoeff;
-    }
-
-    function closePriceModal() {
-        document.getElementById('priceModal').style.display = 'none';
-    }
-
-    function setCoefficient(val) {
-        document.getElementById('priceCoeff').value = val;
-        document.querySelectorAll('.coin-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-    }
-
-    function unlockPrices() {
-        const pass = document.getElementById('pricePassword').value;
-        const coeff = parseFloat(document.getElementById('priceCoeff').value) || 0;
-        
-        if(pass === "000") {
-            pricesVisible = true;
-            priceCoeff = coeff;
-            closePriceModal();
-            handleSearch();
-        } else {
-            alert("Грешна парола!");
-        }
-    }
-
-    // Функции за история на оферти
-    function showHistoryDialog() {
-        updateHistoryList();
-        updateHistoryStats();
-        document.getElementById('historyModal').style.display = 'flex';
-    }
-
-    function closeHistoryModal() {
-        document.getElementById('historyModal').style.display = 'none';
-    }
-
-    function switchHistoryTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        if (tab === 'list') {
-            document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            document.getElementById('historyListTab').classList.add('active');
-        } else {
-            document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            document.getElementById('historyStatsTab').classList.add('active');
-        }
-    }
-
-    function updateHistoryList() {
-        const historyList = document.getElementById('historyList');
-        
-        if (offerHistory.length === 0) {
-            historyList.innerHTML = '<p style="text-align:center; padding:20px;">Няма запазени оферти</p>';
-            return;
-        }
-        
-        // Сортиране по дата (най-новите отгоре)
-        const sortedHistory = [...offerHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        historyList.innerHTML = sortedHistory.map((offer, index) => {
-            const date = new Date(offer.date);
-            const formattedDate = date.toLocaleDateString('bg-BG') + ' ' + date.toLocaleTimeString('bg-BG', {hour: '2-digit', minute:'2-digit'});
-            
-            return `
-                <div class="history-item" onclick="viewHistoryOffer(${offer.id})">
-                    <div class="history-date">${formattedDate}</div>
-                    <div class="history-client">${offer.client}</div>
-                    <div class="history-total">${offer.total.toFixed(2)} EUR.</div>
-                    <div class="history-actions">
-                        <button onclick="event.stopPropagation(); viewHistoryOffer(${offer.id})">👁️ Преглед</button>
-                        <button onclick="event.stopPropagation(); deleteHistoryOffer(${offer.id})">🗑️</button>
-                    </div>
+            <div class="product-card ${i.w > 0 && (i.m1 <= 0 || i.m2 <= 0) ? 'critical' : ''}" onclick="toggleSelect('${escapeHtml(i.code)}')">
+                <div style="position:absolute; top:15px; right:15px;" onclick="event.stopPropagation()">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                           style="width:20px; height:20px; cursor:pointer;" 
+                           onchange="toggleSelect('${escapeHtml(i.code)}')">
                 </div>
-            `;
+                <div class="p-code">${escapeHtml(i.code)}</div>
+                <div style="font-weight:bold; margin:8px 0; padding-right:30px;">${escapeHtml(i.name)}</div>
+                <div style="font-size:0.7rem; color:gray;">${escapeHtml(i.group)} | ${escapeHtml(i.brand)}</div>
+                <div class="price-badge">💰 ${recommendedPrice.toFixed(2)} EUR ${isAutoPrice ? '(изч. ×2)' : ''}</div>
+                ${pricesVisible ? `<div class="delivery-price">📦 Доставна: ${i.pc.toFixed(2)} EUR</div>` : ''}
+                <div class="stock-grid">
+                    <div><div class="s-v">${i.w}</div><div class="s-l">СКЛАД</div></div>
+                    <div><div class="s-v ${i.w > 0 && i.m1 <= 0 ? 'needed' : ''}">${i.m1}</div><div class="s-l">305</div></div>
+                    <div><div class="s-v ${i.w > 0 && i.m2 <= 0 ? 'needed' : ''}">${i.m2}</div><div class="s-l">309</div></div>
+                </div>
+            </div>`;
         }).join('');
+        
+        if (data.length === 0 && inventory.length > 0) {
+            list.innerHTML = '<div class="empty-state">🔍 Няма резултати за това търсене</div>';
+        } else if (inventory.length === 0) {
+            list.innerHTML = '<div class="empty-state">📁 Качете Excel файл за да започнете</div>';
+        }
     }
 
-    function updateHistoryStats() {
-        const statsTab = document.getElementById('historyStats');
+    function updateStats(data) {
+        let total = 0, profit = 0;
+        data.forEach(i => {
+            const qty = i.w + i.m1 + i.m2;
+            const recPrice = getRecommendedPrice(i);
+            total += recPrice * qty;
+            profit += (recPrice - i.pc) * qty;
+        });
+        document.getElementById('statCount').textContent = data.length;
+        document.getElementById('statValue').textContent = total.toFixed(2) + ' EUR';
+        document.getElementById('statProfit').textContent = profit.toFixed(2) + ' EUR';
+    }
+
+    function toggleSelect(code) {
+        if (selectedProducts.has(code)) selectedProducts.delete(code);
+        else selectedProducts.add(code);
         
-        if (offerHistory.length === 0) {
-            statsTab.innerHTML = '<p style="text-align:center; padding:20px;">Няма данни за статистика</p>';
+        const bar = document.getElementById('selectedBar');
+        bar.style.display = selectedProducts.size > 0 ? 'flex' : 'none';
+        document.getElementById('selectedInfo').textContent = `${selectedProducts.size} избрани артикула`;
+        
+        handleSearch();
+    }
+    
+    function clearSelected() {
+        if (selectedProducts.size === 0) return;
+        selectedProducts.clear();
+        const bar = document.getElementById('selectedBar');
+        bar.style.display = 'none';
+        handleSearch();
+    }
+
+    function switchView(view) {
+        document.getElementById('productsView').style.display = view === 'products' ? 'block' : 'none';
+        document.getElementById('offersView').style.display = view === 'offers' ? 'block' : 'none';
+        document.getElementById('tabProducts').classList.toggle('active', view === 'products');
+        document.getElementById('tabOffers').classList.toggle('active', view === 'offers');
+        if(view === 'offers') renderOffersList();
+    }
+
+    function setMarkup(percent) {
+        currentMarkup = percent;
+        document.getElementById('markupPercent').value = percent;
+        document.querySelectorAll('.markup-btn').forEach(btn => {
+            btn.style.background = 'var(--bg)';
+            btn.style.color = 'var(--text)';
+            btn.style.border = '1px solid var(--border)';
+        });
+        if (event && event.target) {
+            event.target.style.background = 'var(--p)';
+            event.target.style.color = 'white';
+        }
+        updateOfferReview();
+    }
+    
+    function updateOfferReview() {
+        const selectedItems = inventory.filter(i => selectedProducts.has(i.code));
+        const review = document.getElementById('offerItemsReview');
+        if (!review) return;
+        
+        review.innerHTML = selectedItems.map(i => {
+            const priceWithMarkup = i.pc * (1 + currentMarkup / 100);
+            const finalPrice = priceWithMarkup > 0 ? priceWithMarkup : getRecommendedPrice(i);
+            return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid var(--border);">
+                <div style="flex:2; font-size:0.85rem;">
+                    <strong>${escapeHtml(i.code)}</strong><br>
+                    <span style="font-size:0.7rem;">${escapeHtml(i.name.substring(0, 35))}${i.name.length > 35 ? '...' : ''}</span>
+                </div>
+                <div style="text-align:right;">
+                    <strong>${finalPrice.toFixed(2)} EUR</strong>
+                </div>
+            </div>`;
+        }).join('');
+        
+        if (selectedItems.length === 0) {
+            review.innerHTML = '<div style="padding:15px; text-align:center; color:gray;">Няма избрани артикули</div>';
+        }
+    }
+
+    function finishSelection() {
+        const selectedItems = inventory.filter(i => selectedProducts.has(i.code));
+        if (selectedItems.length === 0) {
+            alert("Няма избрани артикули!");
             return;
         }
         
-        // Изчисляване на статистики
-        const totalOffers = offerHistory.length;
-        const totalSum = offerHistory.reduce((sum, offer) => sum + offer.total, 0);
-        const averageSum = totalSum / totalOffers;
+        currentMarkup = 0;
+        document.getElementById('markupPercent').value = 0;
+        document.querySelectorAll('.markup-btn').forEach(btn => {
+            btn.style.background = 'var(--bg)';
+            btn.style.color = 'var(--text)';
+            btn.style.border = '1px solid var(--border)';
+        });
+        if (document.querySelector('.markup-btn')) {
+            document.querySelector('.markup-btn').style.background = 'var(--p)';
+            document.querySelector('.markup-btn').style.color = 'white';
+        }
         
-        // Най-често срещани клиенти
-        const clientCounts = {};
-        offerHistory.forEach(offer => {
-            clientCounts[offer.client] = (clientCounts[offer.client] || 0) + 1;
+        updateOfferReview();
+        
+        document.getElementById('offerClient').value = '';
+        document.getElementById('offerNotes').value = '';
+        document.getElementById('createOfferModal').style.display = 'flex';
+    }
+
+    function createOffer() {
+        const client = document.getElementById('offerClient').value.trim() || 'Клиент';
+        const notes = document.getElementById('offerNotes').value;
+        const items = inventory.filter(i => selectedProducts.has(i.code));
+        
+        if (items.length === 0) {
+            alert("Няма избрани артикули!");
+            closeModal('createOfferModal');
+            return;
+        }
+        
+        const markup = currentMarkup;
+        const itemsWithPrice = items.map(i => {
+            const priceWithMarkup = i.pc * (1 + markup / 100);
+            const finalPrice = priceWithMarkup > 0 ? priceWithMarkup : getRecommendedPrice(i);
+            return { ...i, price: finalPrice };
         });
         
-        const topClients = Object.entries(clientCounts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([client, count]) => `<li>${client} - ${count} оферти</li>`)
-            .join('');
+        const total = itemsWithPrice.reduce((sum, i) => sum + i.price, 0);
         
-        statsTab.innerHTML = `
-            <div style="padding:20px;">
-                <h4>Обща статистика</h4>
-                <p><strong>Брой оферти:</strong> ${totalOffers}</p>
-                <p><strong>Обща сума:</strong> ${totalSum.toFixed(2)} EUR.</p>
-                <p><strong>Средна стойност:</strong> ${averageSum.toFixed(2)} EUR.</p>
-                
-                <h4 style="margin-top:20px;">Топ клиенти</h4>
-                <ul style="margin-left:20px;">
-                    ${topClients}
-                </ul>
-            </div>
-        `;
+        const offer = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString('bg-BG'),
+            dateISO: new Date().toISOString(),
+            client: client,
+            notes: notes,
+            items: itemsWithPrice,
+            total: total
+        };
+
+        offerHistory.unshift(offer);
+        localStorage.setItem(OFFERS_KEY, JSON.stringify(offerHistory));
+        
+        selectedProducts.clear();
+        const bar = document.getElementById('selectedBar');
+        bar.style.display = 'none';
+        
+        closeModal('createOfferModal');
+        
+        viewOffer(offer.id);
     }
 
-    function saveOfferToHistory(offerData) {
-        const newOffer = {
-            id: Date.now(), // Уникален ID
-            date: new Date().toISOString(),
-            client: offerData.client,
-            validity: offerData.validity,
-            notes: offerData.notes,
-            items: offerData.items,
-            total: offerData.total,
-            priceCoeff: priceCoeff
-        };
+    function renderOffersList() {
+        const container = document.getElementById('offersListContainer');
+        if (!container) return;
         
-        offerHistory.push(newOffer);
-        
-        // Ограничаване до последните 50 оферти (за да не се препълни localStorage)
-        if (offerHistory.length > 50) {
-            offerHistory = offerHistory.slice(-50);
+        if (offerHistory.length === 0) {
+            container.innerHTML = '<div class="empty-state">📭 Няма запазени оферти<br><br>Маркирайте продукти и натиснете "Създай оферта"</div>';
+            document.getElementById('offerStatCount').textContent = '0';
+            document.getElementById('offerStatTotal').textContent = '0.00';
+            document.getElementById('offerStatMonth').textContent = '0';
+            return;
         }
         
-        localStorage.setItem('ave_offer_history_v13', JSON.stringify(offerHistory));
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const monthOffers = offerHistory.filter(o => {
+            const d = new Date(o.dateISO);
+            return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        });
+        
+        container.innerHTML = offerHistory.map(o => `
+            <div class="offer-card" onclick="viewOffer(${o.id})">
+                <div class="offer-header">
+                    <span class="offer-client">👤 ${escapeHtml(o.client)}</span>
+                    <span class="offer-date">📅 ${o.date}</span>
+                </div>
+                <div class="offer-total">💰 ${o.total.toFixed(2)} EUR</div>
+                ${o.notes ? `<div class="offer-notes">📝 ${escapeHtml(o.notes.substring(0, 60))}${o.notes.length > 60 ? '...' : ''}</div>` : ''}
+                <div style="font-size:0.7rem; color:gray; margin-top:5px;">${o.items.length} артикула</div>
+                <button class="delete-offer-btn" onclick="deleteOffer(event, ${o.id})">🗑️ Изтрий оферта</button>
+            </div>
+        `).join('');
+        
+        document.getElementById('offerStatCount').textContent = offerHistory.length;
+        document.getElementById('offerStatTotal').textContent = offerHistory.reduce((s, o) => s + o.total, 0).toFixed(2);
+        document.getElementById('offerStatMonth').textContent = monthOffers.length;
     }
 
-    function viewHistoryOffer(id) {
-        const offer = offerHistory.find(o => o.id === id);
+    function viewOffer(id) {
+        const offer = offerHistory.find(x => x.id === id);
         if (!offer) return;
         
-        // Възстановяване на офертата за преглед
-        displayHistoryOffer(offer);
-    }
-
-    function displayHistoryOffer(offer) {
-        let itemsHtml = '';
-        let total = 0;
-        
-        offer.items.forEach((item, index) => {
-            total += item.total;
-            itemsHtml += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.code}</td>
-                    <td>${item.name}</td>
-                    <td>${item.brand}</td>
-                    <td style="text-align: center;">${item.quantity}</td>
-                    <td style="text-align: right;">${item.price.toFixed(2)} EUR.</td>
-                    <td style="text-align: right;">${item.total.toFixed(2)} EUR.</td>
-                </tr>
-            `;
-        });
-        
-        const validUntil = new Date(offer.date);
-        validUntil.setDate(validUntil.getDate() + offer.validity);
-        
-        const offerHtml = `
-            <div class="offer-header">
-                <div class="offer-company">АВТОЗОНА 33 ЕООД</div>
-                <div class="offer-title">Оферта № ${offer.id}</div>
+        const content = document.getElementById('offerPreviewContent');
+        content.innerHTML = `
+            <div style="text-align:center; border-bottom:2px solid var(--p); padding-bottom:10px; margin-bottom:20px;">
+                <h2>АВТОЗОНА 33 ЕООД</h2>
+                <h3 style="color:var(--p); margin-top:5px;">ОФЕРТА № ${offer.id}</h3>
+                <p style="font-size:0.8rem; margin-top:5px;">Дата: ${offer.date}</p>
             </div>
             
-            <div class="offer-details">
-                <div><strong>Клиент:</strong> ${offer.client}</div>
-                <div><strong>Дата:</strong> ${new Date(offer.date).toLocaleDateString('bg-BG')}</div>
-                <div><strong>Валидна до:</strong> ${validUntil.toLocaleDateString('bg-BG')}</div>
+            <div style="background:var(--bg); padding:12px; border-radius:8px; margin-bottom:15px;">
+                <p><strong>👤 Клиент:</strong> ${escapeHtml(offer.client)}</p>
+                ${offer.notes ? `<p><strong>📝 Бележки:</strong> ${escapeHtml(offer.notes)}</p>` : ''}
             </div>
-            
-            ${offer.notes ? `<div style="margin:10px 0; padding:10px; background:var(--bg); border-radius:5px;"><strong>Бележки:</strong> ${offer.notes}</div>` : ''}
             
             <table class="offer-table">
                 <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Код</th>
-                        <th>Наименование</th>
-                        <th>Марка</th>
-                        <th>К-во</th>
-                        <th>Ед. цена</th>
-                        <th>Общо</th>
-                    </tr>
+                    <tr><th>№</th><th>Код</th><th>Наименование</th><th>Ед. цена</th></tr>
                 </thead>
                 <tbody>
-                    ${itemsHtml}
+                    ${offer.items.map((item, idx) => `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${escapeHtml(item.code)}</td>
+                            <td>${escapeHtml(item.name)}</td>
+                            <td style="text-align:right;">${item.price.toFixed(2)} EUR</td>
+                        </tr>
+                    `).join('')}
+                    <tr style="border-top:2px solid var(--p); font-weight:bold;">
+                        <td colspan="3" style="text-align:right;">ОБЩО:</td>
+                        <td style="text-align:right;">${offer.total.toFixed(2)} EUR</td>
+                    </tr>
                 </tbody>
             </table>
             
-            <div class="offer-total">
-                Обща стойност: ${offer.total.toFixed(2)} EUR.
-            </div>
-            
-            <div class="offer-footer">
-                <p>АВТОЗОНА 33 ЕООД, София, ул. Мюнхен 14, склад 7</p>
+            <div style="margin-top:20px; padding-top:10px; text-align:center; font-size:0.7rem; color:gray; border-top:1px solid var(--border);">
+                <p>АВТОЗОНА 33 ЕООД | София, ул. Мюнхен 14, склад 7</p>
                 <p>тел. 0878717808 | email: autozone33@gmail.com</p>
             </div>
         `;
-        
-        document.getElementById('offerPreviewContent').innerHTML = offerHtml;
-        closeHistoryModal();
         document.getElementById('offerPreviewModal').style.display = 'flex';
     }
 
-    function deleteHistoryOffer(id) {
-        if (confirm('Изтриване на офертата?')) {
-            offerHistory = offerHistory.filter(o => o.id !== id);
-            localStorage.setItem('ave_offer_history_v13', JSON.stringify(offerHistory));
-            updateHistoryList();
-            updateHistoryStats();
-        }
-    }
-
-    function clearAllHistory() {
-        if (confirm('Изтриване на ЦЯЛАТА история с оферти?')) {
-            offerHistory = [];
-            localStorage.removeItem('ave_offer_history_v13');
-            updateHistoryList();
-            updateHistoryStats();
-        }
-    }
-
-    // Функции за оферта
-    function showOfferDialog() {
-        if (selectedProducts.size === 0) {
-            alert('Няма маркирани продукти за оферта!');
-            return;
-        }
-        
-        const offerItems = inventory.filter(item => selectedProducts.has(item.code));
-        
-        offerQuantities = {};
-        offerItems.forEach(item => {
-            offerQuantities[item.code] = 1;
-        });
-        
-        let quantitiesHtml = '';
-        offerItems.forEach(item => {
-            quantitiesHtml += `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:5px; background:var(--bg); border-radius:5px;">
-                    <div style="flex:2; font-size:0.8rem;">${item.code} - ${item.name.substring(0,30)}...</div>
-                    <div style="flex:1; display:flex; align-items:center; gap:5px;">
-                        <input type="number" id="qty_${item.code}" class="quantity-input" value="1" min="1" max="100" onchange="updateQuantity('${item.code}', this.value)">
-                        <span>бр.</span>
-                    </div>
-                </div>
-            `;
-        });
-        
-        document.getElementById('offerQuantities').innerHTML = quantitiesHtml;
-        document.getElementById('offerModal').style.display = 'flex';
-    }
-
-    function updateQuantity(code, value) {
-        offerQuantities[code] = parseInt(value) || 1;
-    }
-
-    function closeOfferModal() {
-        document.getElementById('offerModal').style.display = 'none';
-    }
-
-    function closeOfferPreview() {
-        document.getElementById('offerPreviewModal').style.display = 'none';
-    }
-
-    function generateOffer() {
-        const client = document.getElementById('offerClient').value || 'Клиент';
-        const validity = parseInt(document.getElementById('offerValidity').value) || 14;
-        const notes = document.getElementById('offerNotes').value;
-        
-        const today = new Date();
-        const validUntil = new Date(today);
-        validUntil.setDate(today.getDate() + validity);
-        
-        const formatDate = (date) => {
-            return date.getDate().toString().padStart(2,'0') + '.' + 
-                   (date.getMonth()+1).toString().padStart(2,'0') + '.' + 
-                   date.getFullYear();
-        };
-        
-        const offerItems = inventory.filter(item => selectedProducts.has(item.code));
-        
-        if (offerItems.length === 0) {
-            alert('Няма маркирани продукти!');
-            closeOfferModal();
-            return;
-        }
-        
-        let total = 0;
-        let itemsHtml = '';
-        let itemsForHistory = [];
-        
-        offerItems.forEach((item, index) => {
-            const quantity = offerQuantities[item.code] || 1;
-            const priceWithMarkup = item.pc * (1 + priceCoeff/100);
-            const itemTotal = priceWithMarkup * quantity;
-            total += itemTotal;
-            
-            itemsHtml += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${item.code}</td>
-                    <td>${item.name}</td>
-                    <td>${item.brand}</td>
-                    <td style="text-align: center;">${quantity}</td>
-                    <td style="text-align: right;">${priceWithMarkup.toFixed(2)} EUR.</td>
-                    <td style="text-align: right;">${itemTotal.toFixed(2)} EUR.</td>
-                </tr>
-            `;
-            
-            itemsForHistory.push({
-                code: item.code,
-                name: item.name,
-                brand: item.brand,
-                quantity: quantity,
-                price: priceWithMarkup,
-                total: itemTotal
-            });
-        });
-        
-        const offerHtml = `
-            <div class="offer-header">
-                <div class="offer-company">АВТОЗОНА 33 ЕООД</div>
-                <div class="offer-title">Оферта № ${Date.now()}</div>
-            </div>
-            
-            <div class="offer-details">
-                <div><strong>Клиент:</strong> ${client}</div>
-                <div><strong>Дата:</strong> ${formatDate(today)}</div>
-                <div><strong>Валидна до:</strong> ${formatDate(validUntil)}</div>
-            </div>
-            
-            ${notes ? `<div style="margin:10px 0; padding:10px; background:var(--bg); border-radius:5px;"><strong>Бележки:</strong> ${notes}</div>` : ''}
-            
-            <table class="offer-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Код</th>
-                        <th>Наименование</th>
-                        <th>Марка</th>
-                        <th>К-во</th>
-                        <th>Ед. цена</th>
-                        <th>Общо</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${itemsHtml}
-                </tbody>
-            </table>
-            
-            <div class="offer-total">
-                Обща стойност: ${total.toFixed(2)} EUR.
-            </div>
-            
-            <div class="offer-footer">
-                <p>АВТОЗОНА 33 ЕООД, София, ул. Мюнхен 14, склад 7</p>
-                <p>тел. 0878717808 | email: autozone33@gmail.com</p>
-            </div>
-        `;
-        
-        // Запазване в историята
-        saveOfferToHistory({
-            client: client,
-            validity: validity,
-            notes: notes,
-            items: itemsForHistory,
-            total: total
-        });
-        
-        document.getElementById('offerPreviewContent').innerHTML = offerHtml;
-        closeOfferModal();
-        document.getElementById('offerPreviewModal').style.display = 'flex';
-    }
-
-    function printOffer() {
+    function printOfferOnly() {
         const content = document.getElementById('offerPreviewContent').innerHTML;
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
+            <!DOCTYPE html>
             <html>
                 <head>
                     <title>Оферта</title>
+                    <meta charset="UTF-8">
                     <style>
-                        body { font-family: Arial, sans-serif; padding: 20px; }
-                        .offer-header { text-align: center; margin-bottom: 20px; }
-                        .offer-company { font-size: 1.5rem; font-weight: bold; }
-                        .offer-title { font-size: 1.2rem; color: #667eea; }
-                        .offer-details { display: flex; justify-content: space-between; margin: 20px 0; padding: 10px; background: #f5f5f5; }
-                        .offer-table { width: 100%; border-collapse: collapse; }
-                        .offer-table th { background: #667eea; color: white; padding: 8px; text-align: left; }
-                        .offer-table td { padding: 8px; border-bottom: 1px solid #ddd; }
-                        .offer-total { font-size: 1.2rem; font-weight: bold; text-align: right; margin-top: 20px; }
-                        .offer-footer { margin-top: 30px; text-align: center; color: gray; }
+                        body {
+                            font-family: 'Segoe UI', Arial, sans-serif;
+                            padding: 20px;
+                            margin: 0;
+                            background: white;
+                        }
+                        .offer-header {
+                            text-align: center;
+                            border-bottom: 2px solid #667eea;
+                            padding-bottom: 10px;
+                            margin-bottom: 20px;
+                        }
+                        .offer-header h2 {
+                            margin: 0;
+                            color: #333;
+                            font-size: 1.5rem;
+                        }
+                        .offer-header h3 {
+                            margin: 5px 0 0;
+                            color: #667eea;
+                            font-size: 1.2rem;
+                        }
+                        .offer-details {
+                            background: #f5f5f5;
+                            padding: 12px;
+                            border-radius: 8px;
+                            margin-bottom: 15px;
+                        }
+                        .offer-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 15px 0;
+                        }
+                        .offer-table th {
+                            background: #667eea;
+                            color: white;
+                            padding: 10px;
+                            text-align: left;
+                            border: 1px solid #5568c4;
+                        }
+                        .offer-table td {
+                            padding: 8px;
+                            border: 1px solid #ddd;
+                        }
+                        .offer-total {
+                            text-align: right;
+                            font-weight: bold;
+                            font-size: 1.2rem;
+                            margin-top: 15px;
+                            padding-top: 10px;
+                            border-top: 2px solid #667eea;
+                        }
+                        .offer-footer {
+                            margin-top: 30px;
+                            text-align: center;
+                            font-size: 0.7rem;
+                            color: gray;
+                            border-top: 1px solid #ddd;
+                            padding-top: 10px;
+                        }
+                        @media print {
+                            body {
+                                padding: 0;
+                            }
+                        }
                     </style>
                 </head>
                 <body>
@@ -992,6 +737,90 @@
         `);
         printWindow.document.close();
         printWindow.print();
+    }
+
+    function deleteOffer(event, id) {
+        event.stopPropagation();
+        if (!confirm("Сигурни ли сте, че искате да изтриете тази оферта?")) return;
+        offerHistory = offerHistory.filter(o => o.id !== id);
+        localStorage.setItem(OFFERS_KEY, JSON.stringify(offerHistory));
+        renderOffersList();
+    }
+
+    function toggleTheme() {
+        const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }
+
+    function unlockPrices() {
+        const pass = document.getElementById('pricePassword').value;
+        if (pass === "0618") {
+            pricesVisible = true;
+            closePriceModal();
+            handleSearch();
+        } else {
+            alert("Грешна парола!");
+        }
+    }
+
+    function clearData() {
+        if (confirm("Ще изтриете цялата база данни! Сигурни ли сте?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(OFFERS_KEY);
+            location.reload();
+        }
+    }
+
+    function initFilters() {
+        const groups = [...new Set(inventory.map(i => i.group))].sort();
+        const select = document.getElementById('subGroupFilter');
+        select.innerHTML = '<option value="">Всички групи</option>' + groups.map(g => `<option value="${g}">${escapeHtml(g)}</option>`).join('');
+        updateDynamicFilters();
+    }
+
+    function updateDynamicFilters() {
+        const g = document.getElementById('subGroupFilter').value;
+        const brands = [...new Set(inventory.filter(i => !g || i.group === g).map(i => i.brand))].sort();
+        const select = document.getElementById('brandFilter');
+        select.innerHTML = '<option value="">Всички марки</option>' + brands.map(b => `<option value="${b}">${escapeHtml(b)}</option>`).join('');
+    }
+
+    function toggleChip(c) {
+        activeFilters[c] = !activeFilters[c];
+        const chip = document.getElementById('chip' + c.charAt(0).toUpperCase() + c.slice(1));
+        if (chip) chip.classList.toggle('active');
+        handleSearch();
+    }
+
+    function showSelectedOnly() {
+        if (selectedProducts.size === 0) {
+            alert("Няма маркирани продукти!");
+            return;
+        }
+        const filtered = inventory.filter(i => selectedProducts.has(i.code));
+        renderList(filtered);
+        updateStats(filtered);
+    }
+
+    function showPriceDialog() { 
+        document.getElementById('pricePassword').value = '';
+        document.getElementById('priceModal').style.display = 'flex'; 
+    }
+    
+    function closePriceModal() { 
+        document.getElementById('priceModal').style.display = 'none'; 
+    }
+    
+    function closeModal(id) { 
+        document.getElementById(id).style.display = 'none'; 
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 </script>
 </body>
